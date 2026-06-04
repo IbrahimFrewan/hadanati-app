@@ -27,12 +27,22 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Initialize EAS project
+        working-directory: HadanatiApp
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas init --non-interactive --force || true
+
       - name: Build APK
         working-directory: HadanatiApp
-        run: eas build --platform android --profile preview --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform android --profile preview --non-interactive --no-wait
 
-      - name: Get APK URL
+      - name: Print build URL
         working-directory: HadanatiApp
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          URL=$(EXPO_TOKEN=${{ secrets.EXPO_TOKEN }} eas build:list --platform android --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
-          echo "✅ APK ready — download: $URL"
+          echo "✅ Build submitted! Track progress and download APK at:"
+          eas build:list --platform android --limit 1 --json --non-interactive | jq -r '.[0] | "Status: \(.status)\nURL: \(.artifacts.buildUrl // "Building... check https://expo.dev/builds")"'
