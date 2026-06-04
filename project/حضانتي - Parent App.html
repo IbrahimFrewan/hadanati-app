@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>حضانتي · Parent App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; padding: 0; background: #efece4; font-family: Rubik, sans-serif; }
+  ::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+  button { -webkit-tap-highlight-color: transparent; }
+  input, textarea { -webkit-tap-highlight-color: transparent; }
+
+  .skel { background: linear-gradient(100deg, #eae4d6 28%, #f4efe5 50%, #eae4d6 72%); background-size: 220% 100%; animation: shimmer 1.35s infinite linear; }
+  @keyframes shimmer { 0% { background-position: 220% 0; } 100% { background-position: -220% 0; } }
+  .fade-up { animation: fadeUp .26s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fadeUp { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .scr { animation: scrIn .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes scrIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+  .pop { animation: pop .55s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- shared helpers -->
+<script type="text/babel" src="helpers/icons.jsx"></script>
+<script type="text/babel" src="helpers/data.jsx"></script>
+<script type="text/babel" src="helpers/motifs.jsx"></script>
+<script type="text/babel" src="helpers/backdrop.jsx"></script>
+<script type="text/babel" src="helpers/shell.jsx"></script>
+
+<!-- design system + shared cards -->
+<script type="text/babel" src="parent-app/ds.jsx"></script>
+<script type="text/babel" src="parent-app/cards.jsx"></script>
+
+<!-- screens -->
+<script type="text/babel" src="parent-app/screens-onboard.jsx"></script>
+<script type="text/babel" src="parent-app/screens-home.jsx"></script>
+<script type="text/babel" src="parent-app/screens-browse.jsx"></script>
+<script type="text/babel" src="parent-app/screens-nursery.jsx"></script>
+<script type="text/babel" src="parent-app/screens-booking.jsx"></script>
+<script type="text/babel" src="parent-app/screens-bookings.jsx"></script>
+<script type="text/babel" src="parent-app/screens-children.jsx"></script>
+<script type="text/babel" src="parent-app/screens-reports.jsx"></script>
+<script type="text/babel" src="parent-app/screens-comms.jsx"></script>
+<script type="text/babel" src="parent-app/screens-account.jsx"></script>
+
+<!-- shell renders last -->
+<script type="text/babel" src="parent-app/app.jsx"></script>
+<script type="text/babel">
+  ReactDOM.createRoot(document.getElementById("root")).render(<window.ParentApp />);
+</script>
+</body>
+</html>
