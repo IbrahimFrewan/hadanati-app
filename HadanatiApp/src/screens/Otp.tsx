@@ -10,6 +10,7 @@ import { t } from '../i18n';
 export function OtpScreen({ navigation, route }: any) {
   const { lang } = useApp();
   const phone = route.params?.phone || '7 9123 4567';
+  const mode = route.params?.mode || 'register';
   const masked = '+962 ' + String(phone).slice(0, 1) + ' •••• ' + String(phone).slice(-2);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
@@ -28,7 +29,7 @@ export function OtpScreen({ navigation, route }: any) {
     if (d && i < 5) refs.current[i + 1]?.focus();
     if (next.every(x => x)) {
       setVerifying(true);
-      setTimeout(() => navigation.replace('profileSetup'), 800);
+      setTimeout(() => navigation.replace(mode === 'login' ? 'tabs' : 'profileSetup'), 800);
     }
   };
 

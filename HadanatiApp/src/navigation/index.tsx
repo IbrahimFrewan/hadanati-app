@@ -8,6 +8,7 @@ import { useApp } from '../context/AppContext';
 
 // Screens
 import { SplashScreen } from '../screens/Splash';
+import { LoginScreen } from '../screens/Login';
 import { RegisterScreen } from '../screens/Register';
 import { OtpScreen } from '../screens/Otp';
 import { ProfileSetupScreen } from '../screens/ProfileSetup';
@@ -95,6 +96,7 @@ export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: C.page } }}>
       <Stack.Screen name="splash" component={SplashScreen} />
+      <Stack.Screen name="login" component={LoginScreen} />
       <Stack.Screen name="register" component={RegisterScreen} />
       <Stack.Screen name="otp" component={OtpScreen} />
       <Stack.Screen name="profileSetup" component={ProfileSetupScreen} />

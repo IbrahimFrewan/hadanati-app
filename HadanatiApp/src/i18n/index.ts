@@ -13,6 +13,13 @@ export const strings: Record<Lang, Record<string, string>> = {
     getStarted: 'Get started',
     loginPrompt: 'I already have an account · ',
     login: 'Log in',
+    // Login
+    welcomeBack: 'Welcome back',
+    loginSubtitle: 'Enter your registered number and we\'ll send you a one-time code.',
+    noPasswordNote: 'No password needed — we verify your identity with a one-time code every time.',
+    sendLoginCode: 'Send login code',
+    newHere: 'New here?',
+    phoneError: 'Enter a valid Jordanian mobile number starting with 7.',
     // Register
     createAccount: 'Create your account',
     whatsYourNumber: 'What\'s your number?',
@@ -313,6 +320,13 @@ export const strings: Record<Lang, Record<string, string>> = {
     getStarted: 'ابدئي الآن',
     loginPrompt: 'لديّ حساب بالفعل · ',
     login: 'تسجيل الدخول',
+    // Login
+    welcomeBack: 'مرحباً بعودتك',
+    loginSubtitle: 'أدخلي رقمك المسجّل وسنرسل لك رمزاً للمرة الواحدة.',
+    noPasswordNote: 'لا حاجة لكلمة مرور — نتحقق من هويتك برمز لمرة واحدة في كل مرة.',
+    sendLoginCode: 'إرسال رمز الدخول',
+    newHere: 'لأول مرة؟',
+    phoneError: 'أدخلي رقم جوال أردني صحيح يبدأ بـ 7.',
     // Register
     createAccount: 'إنشاء حسابك',
     whatsYourNumber: 'ما رقم هاتفك؟',

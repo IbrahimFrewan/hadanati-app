@@ -86,7 +86,7 @@ export function SplashScreen({ navigation }: any) {
         >
           {isLast ? t(lang, 'getStarted') : t(lang, 'next')}
         </Button>
-        <TouchableOpacity onPress={() => navigation.replace('register')} style={{ marginTop: 14, alignItems: 'center' }}>
+        <TouchableOpacity onPress={() => navigation.replace('login')} style={{ marginTop: 14, alignItems: 'center' }}>
           <Text style={{ fontFamily: F.body, fontSize: 13.5, color: C.mut }}>
             {t(lang, 'loginPrompt')}<Text style={{ color: C.dgreen, fontWeight: '700' }}>{t(lang, 'login')}</Text>
           </Text>
