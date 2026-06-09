@@ -1,0 +1,31 @@
+{
+  "name": "nurseryapp",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
+  },
+  "dependencies": {
+    "expo": "~56.0.0",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "@expo-google-fonts/baloo-2": "^0.3.0",
+    "@expo-google-fonts/rubik": "^0.3.0",
+    "@react-navigation/native": "^7.0.14",
+    "@react-navigation/native-stack": "^7.2.0",
+    "@react-navigation/bottom-tabs": "^7.2.0",
+    "react-native-screens": "~4.10.0",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-svg": "15.11.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "typescript": "^5.3.3"
+  }
+}
