@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { Button, TopBar, Field } from '../components';
@@ -8,18 +9,35 @@ import { useApp } from '../context/AppContext';
 import { t } from '../i18n';
 
 export function RegisterScreen({ navigation }: any) {
-  const { lang } = useApp();
+  const { lang, actions } = useApp();
   const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
+  const [photoUri, setPhotoUri] = useState('');
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
   const digits = phone.replace(/\D/g, '');
-  const valid = digits.length === 9 && digits[0] === '7';
+  const valid = digits.length === 9 && digits[0] === '7' && name.trim().length >= 2;
+
+  const pickPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
 
   const submit = () => {
     if (!valid) { setErr('Enter a valid Jordan mobile number (9 digits, starts with 7).'); return; }
     setErr(''); setLoading(true);
+    actions.updateUser({ name: name.trim(), photoUri });
     setTimeout(() => { setLoading(false); navigation.push('otp', { phone: digits }); }, 900);
   };
 
@@ -27,8 +45,37 @@ export function RegisterScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>
       <TopBar title={t(lang, 'createAccount')} onBack={() => navigation.goBack()} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24 }}>
+
+        {/* Photo picker */}
+        <View style={{ alignItems: 'center', marginBottom: 24 }}>
+          <TouchableOpacity onPress={pickPhoto} style={{ position: 'relative' }}>
+            <View style={{ width: 90, height: 90, borderRadius: 45, overflow: 'hidden', borderWidth: 2, borderColor: C.line, backgroundColor: C.cream }}>
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={{ width: 90, height: 90 }} />
+              ) : (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="user" size={38} color={C.mut} />
+                </View>
+              )}
+            </View>
+            <View style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: C.header, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' }}>
+              <Icon name="camera" size={14} color="#fff" />
+            </View>
+          </TouchableOpacity>
+          <Text style={{ marginTop: 8, fontSize: 12, color: C.mut }}>{photoUri ? 'Tap to change photo' : 'Add your photo (optional)'}</Text>
+        </View>
+
+        <Field
+          label={t(lang, 'fullName')}
+          icon="user"
+          placeholder={t(lang, 'fullNamePlaceholder')}
+          value={name}
+          onChangeText={v => { setName(v); setErr(''); }}
+          autoFocus
+        />
+
         <View style={{ marginBottom: 24 }}>
-          <Text style={{ fontFamily: F.displayBold, fontSize: 26, fontWeight: '700', color: C.ink, marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left' }}>{t(lang, 'whatsYourNumber')}</Text>
+          <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 6, textAlign: lang === 'ar' ? 'right' : 'left' }}>{t(lang, 'whatsYourNumber')}</Text>
           <Text style={{ fontSize: 13.5, color: C.mut, lineHeight: 20, textAlign: lang === 'ar' ? 'right' : 'left' }}>{t(lang, 'phoneHint')}</Text>
         </View>
 

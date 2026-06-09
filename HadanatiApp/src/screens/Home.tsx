@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, Modal, FlatList, TextInput,
+  BackHandler, Alert,
 } from 'react-native';
-import Svg, { Defs, LinearGradient as SVGGrad, Stop, Rect as SVGRect } from 'react-native-svg';
+import Svg, { Defs, LinearGradient as SVGGrad, Stop, Rect as SVGRect, Circle, G } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
@@ -28,12 +29,34 @@ function CardGradient({ height }: { height: number }) {
 }
 
 function FavBtn({ id }: { id: string }) {
-  const { store, actions } = useApp();
+  const { store, actions, lang } = useApp();
   const on = store.favorites.includes(id);
   return (
-    <TouchableOpacity onPress={() => actions.toggleFav(id)} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
+    <TouchableOpacity onPress={() => {
+      actions.toggleFav(id);
+      actions.showToast(on ? t(lang, 'removedFromFav') : t(lang, 'addedToFav'));
+    }} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
       <Icon name="heart" size={17} color={on ? C.danger : C.mut} fill={on ? C.danger : 'none'} />
     </TouchableOpacity>
+  );
+}
+
+function HeroPattern() {
+  return (
+    <Svg style={{ position: 'absolute', inset: 0 } as any} width="100%" height="100%" opacity={0.07}>
+      <G>
+        {[20,80,140,200,260,320].map((x, i) =>
+          [30,90,150].map((y, j) => (
+            <Circle key={`${i}-${j}`} cx={x + (j % 2) * 30} cy={y} r={5} fill="#fff" />
+          ))
+        )}
+        {[50,110,170,230,290].map((x, i) =>
+          [60,120,180].map((y, j) => (
+            <Circle key={`s-${i}-${j}`} cx={x} cy={y + (i % 2) * 20} r={3} fill="#fff" />
+          ))
+        )}
+      </G>
+    </Svg>
   );
 }
 
@@ -149,11 +172,27 @@ export function HomeScreen({ navigation }: any) {
   const sponsored = NURSERIES.filter(n => n.sponsored);
   const isRTL = lang === 'ar';
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      Alert.alert(
+        'Exit app?',
+        'Are you sure you want to close Hadanati?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
+        ],
+      );
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
+
   return (
     <View style={{ flex: 1, backgroundColor: C.page }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 96 }} showsVerticalScrollIndicator={false}>
         {/* Green header */}
-        <View style={{ backgroundColor: C.header, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, paddingHorizontal: 22, paddingBottom: 54, overflow: 'hidden' }}>
+        <View style={{ backgroundColor: C.header, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, paddingHorizontal: 22, paddingBottom: 54, overflow: 'hidden', position: 'relative' }}>
+          <HeroPattern />
           <SafeAreaView edges={['top']}>
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, marginBottom: 22 }}>
               <TouchableOpacity

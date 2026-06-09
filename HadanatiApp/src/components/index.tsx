@@ -297,8 +297,9 @@ export function NurseryImage({ src, seed, radius = 16, style }: {
 }
 
 // ---- AvatarImage --------------------------------------------------
-export function AvatarImage({ seed, size = 60, radius }: { seed?: string; size?: number; radius?: number }) {
-  const uri = `https://i.pravatar.cc/240?u=${encodeURIComponent(seed || 'guest')}`;
+export function AvatarImage({ seed, size = 60, radius, uri: propUri }: { seed?: string; size?: number; radius?: number; uri?: string }) {
+  const fallbackUri = `https://i.pravatar.cc/240?u=${encodeURIComponent(seed || 'guest')}`;
+  const uri = propUri || fallbackUri;
   return (
     <View style={{ width: size, height: size, borderRadius: radius ?? size / 2, overflow: 'hidden', backgroundColor: '#e0d8c8' }}>
       <Image source={{ uri }} style={{ width: size, height: size }} resizeMode="cover" />

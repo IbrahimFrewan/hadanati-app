@@ -295,6 +295,9 @@ export const strings: Record<Lang, Record<string, string>> = {
     completedStatus: 'Completed',
     cancelledStatus: 'Cancelled',
     requestedStatus: 'Requested',
+    // Favorites
+    addedToFav: 'Added to saved nurseries ❤️',
+    removedFromFav: 'Removed from saved nurseries',
     // Common
     jd: 'JD',
     mo: '/mo',
@@ -610,6 +613,9 @@ export const strings: Record<Lang, Record<string, string>> = {
     day: '/يوم',
     months: ' أشهر',
     years: ' سنوات',
+    // Favorites
+    addedToFav: 'أُضيفت للحضانات المحفوظة ❤️',
+    removedFromFav: 'حُذفت من الحضانات المحفوظة',
     backToHome: 'العودة للرئيسية',
     comingSoon: ' قريباً',
     comingSoonBody: 'هذه الشاشة ستكون ضمن الدفعة القادمة.',

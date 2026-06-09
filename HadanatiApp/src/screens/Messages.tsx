@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { TopBar, NurseryImage, EmptyView } from '../components';
@@ -15,6 +15,7 @@ export function MessagesScreen({ navigation }: any) {
   const isRTL = lang === 'ar';
 
   const thread = store.threads.find(t => t.id === openThread);
+  const insets = useSafeAreaInsets();
 
   const send = () => {
     if (!text.trim() || !openThread) return;
@@ -25,7 +26,7 @@ export function MessagesScreen({ navigation }: any) {
   if (thread) {
     const n = getNursery(thread.nurseryId);
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: C.page }}>
         <TopBar
           title={n?.name || 'Chat'}
           subtitle={t(lang, 'usuallyReplies')}
@@ -36,7 +37,7 @@ export function MessagesScreen({ navigation }: any) {
             </TouchableOpacity>
           }
         />
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
           <FlatList
             data={thread.messages}
             keyExtractor={(_, i) => String(i)}
@@ -54,7 +55,7 @@ export function MessagesScreen({ navigation }: any) {
               </View>
             )}
           />
-          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', padding: 16, paddingBottom: 22, borderTopWidth: 1, borderTopColor: C.line, gap: 9, alignItems: 'center' }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', padding: 16, paddingBottom: Math.max(insets.bottom, 14), borderTopWidth: 1, borderTopColor: C.line, gap: 9, alignItems: 'center', backgroundColor: C.page }}>
             <TouchableOpacity style={{ width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon name="paperclip" size={19} color={C.mut} />
             </TouchableOpacity>

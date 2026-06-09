@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, FlatList } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { Button, NurseryImage, AvailBadge, Rating, Verified } from '../components';
@@ -8,13 +8,82 @@ import { useApp } from '../context/AppContext';
 import { NURSERIES, getNursery } from '../data';
 import { t } from '../i18n';
 
+const { width: W } = Dimensions.get('window');
+
+const GALLERY_SEEDS = ['a', 'b', 'c', 'd', 'e', 'f'];
+
 function FavBtn({ id, size = 32 }: { id: string; size?: number }) {
-  const { store, actions } = useApp();
+  const { store, actions, lang } = useApp();
   const on = store.favorites.includes(id);
   return (
-    <TouchableOpacity onPress={() => actions.toggleFav(id)} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
+    <TouchableOpacity onPress={() => {
+      actions.toggleFav(id);
+      actions.showToast(on ? t(lang, 'removedFromFav') : t(lang, 'addedToFav'));
+    }} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
       <Icon name="heart" size={Math.round(size * 0.52)} color={on ? C.danger : C.mut} fill={on ? C.danger : 'none'} />
     </TouchableOpacity>
+  );
+}
+
+function GalleryHeader({ n, navigation, isRTL }: { n: typeof NURSERIES[0]; navigation: any; isRTL: boolean }) {
+  const [idx, setIdx] = useState(0);
+  const flatRef = useRef<FlatList>(null);
+  const items = GALLERY_SEEDS.map((s, i) => ({ key: s, img: n.img, seed: n.id + s }));
+
+  return (
+    <View style={{ height: 280, position: 'relative' }}>
+      <FlatList
+        ref={flatRef}
+        data={items}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={it => it.key}
+        onMomentumScrollEnd={e => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))}
+        renderItem={({ item }) => (
+          <View style={{ width: W, height: 280 }}>
+            <NurseryImage src={item.img} seed={item.seed} radius={0} />
+            <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(28,51,36,0.35)' }} />
+          </View>
+        )}
+      />
+
+      {/* Dot indicators */}
+      <View style={{ position: 'absolute', bottom: 50, alignSelf: 'center', flexDirection: 'row', gap: 5 }}>
+        {items.map((_, i) => (
+          <View key={i} style={{ width: i === idx ? 18 : 6, height: 6, borderRadius: 3, backgroundColor: i === idx ? '#fff' : 'rgba(255,255,255,0.5)', transition: 'width 0.2s' as any }} />
+        ))}
+      </View>
+
+      {/* Nav buttons */}
+      <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2 }}>
+        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', padding: 16, paddingTop: 2 }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name={isRTL ? 'chevRight' : 'chevLeft'} size={22} color={C.ink} />
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 9 }}>
+            <TouchableOpacity style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="send" size={19} color={C.ink} />
+            </TouchableOpacity>
+            <FavBtn id={n.id} size={42} />
+          </View>
+        </View>
+      </SafeAreaView>
+
+      {/* Photo / video pill */}
+      <View style={{ position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', gap: 6 }}>
+        <TouchableOpacity onPress={() => { flatRef.current?.scrollToIndex({ index: 0, animated: true }); setIdx(0); }}
+          style={{ backgroundColor: idx === 0 ? '#fff' : 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
+          <Text style={{ color: idx === 0 ? C.dgreen : '#fff', fontSize: 11, fontWeight: '700' }}>Photos</Text>
+        </TouchableOpacity>
+        <View style={{ backgroundColor: 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
+          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>▶ video</Text>
+        </View>
+        <View style={{ backgroundColor: 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
+          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>{idx + 1}/{items.length}</Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -51,6 +120,7 @@ export function NurseryScreen({ navigation, route }: any) {
   const { lang, actions } = useApp();
   const n = getNursery(route.params?.id) || NURSERIES[0];
   const isRTL = lang === 'ar';
+  const insets = useSafeAreaInsets();
   const AGES: Record<string, string> = { infant: t(lang, 'ageGroupInfant'), toddler: t(lang, 'ageGroupToddler'), preschool: t(lang, 'ageGroupPreschool') };
 
   const plans = [
@@ -73,31 +143,7 @@ export function NurseryScreen({ navigation, route }: any) {
   return (
     <View style={{ flex: 1, backgroundColor: C.page }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 12 }} showsVerticalScrollIndicator={false}>
-        {/* Gallery */}
-        <View style={{ height: 280, position: 'relative' }}>
-          <NurseryImage src={n.img} seed={n.id} radius={0} />
-          <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(28,51,36,0.35)' }} />
-          <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2 }}>
-            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', padding: 16, paddingTop: 2 }}>
-              <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={isRTL ? 'chevRight' : 'chevLeft'} size={22} color={C.ink} />
-              </TouchableOpacity>
-              <View style={{ flexDirection: 'row', gap: 9 }}>
-                <TouchableOpacity style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="send" size={19} color={C.ink} />
-                </TouchableOpacity>
-                <FavBtn id={n.id} size={42} />
-              </View>
-            </View>
-          </SafeAreaView>
-          <View style={{ position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', gap: 6 }}>
-            {['photos', '▶ video', '+12'].map((l, i) => (
-              <View key={i} style={{ backgroundColor: 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
-                <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>{l}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        <GalleryHeader n={n} navigation={navigation} isRTL={isRTL} />
 
         {/* Identity */}
         <View style={{ padding: 22, paddingBottom: 4 }}>
@@ -205,8 +251,8 @@ export function NurseryScreen({ navigation, route }: any) {
         </Section>
       </ScrollView>
 
-      {/* Sticky book bar */}
-      <View style={{ borderTopWidth: 1, borderTopColor: C.line, backgroundColor: '#fff', padding: 20, paddingBottom: 24, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 14 }}>
+      {/* Sticky book bar — above system nav */}
+      <View style={{ borderTopWidth: 1, borderTopColor: C.line, backgroundColor: '#fff', paddingTop: 14, paddingHorizontal: 20, paddingBottom: Math.max(insets.bottom, 12) + 8, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 14 }}>
         <View>
           <Text style={{ fontSize: 11, color: C.mut }}>{t(lang, 'from')}</Text>
           <Text style={{ fontFamily: F.displayBold, fontWeight: '800', fontSize: 21, color: C.ink }}>{n.priceFrom} JD<Text style={{ fontSize: 12, color: C.mut, fontWeight: '600' }}>/{n.unit}</Text></Text>

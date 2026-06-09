@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Dimensions, ScrollView, I18nManager } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, Dimensions, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
@@ -7,7 +7,7 @@ import { Button, LangToggle } from '../components';
 import { useApp } from '../context/AppContext';
 import { t, Lang } from '../i18n';
 
-const { width } = Dimensions.get('window');
+const { width: W } = Dimensions.get('window');
 
 const slides = [
   { titleKey: 'slide1Title', bodyKey: 'slide1Body', icon: 'leaf' as const },
@@ -30,6 +30,7 @@ export function SplashScreen({ navigation }: any) {
   const { lang, actions } = useApp();
   const [idx, setIdx] = useState(0);
   const [uiLang, setUiLang] = useState(lang === 'ar' ? 'ع' : 'EN');
+  const scrollRef = useRef<ScrollView>(null);
   const slide = slides[idx];
   const isLast = idx === slides.length - 1;
 
@@ -37,6 +38,16 @@ export function SplashScreen({ navigation }: any) {
     setUiLang(l);
     const newLang: Lang = l === 'ع' ? 'ar' : 'en';
     actions.setLang(newLang);
+  };
+
+  const goTo = (i: number) => {
+    setIdx(i);
+    scrollRef.current?.scrollTo({ x: i * W, animated: true });
+  };
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const newIdx = Math.round(e.nativeEvent.contentOffset.x / W);
+    if (newIdx !== idx) setIdx(newIdx);
   };
 
   return (
@@ -47,33 +58,42 @@ export function SplashScreen({ navigation }: any) {
         <LangToggle lang={uiLang} onSet={handleLang} />
       </View>
 
-      {/* Hero card */}
-      <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 26 }}>
-        <TouchableOpacity
-          onPress={() => setIdx((idx + 1) % slides.length)}
-          style={{ height: 286, borderRadius: 28, backgroundColor: C.header, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', marginBottom: 28 }}
-          activeOpacity={0.9}
+      {/* Swipeable hero cards */}
+      <View style={{ flex: 1, justifyContent: 'center' }}>
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={onScroll}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ alignItems: 'center' }}
         >
-          {/* Motif backdrop dots */}
-          <View style={{ position: 'absolute', inset: 0, opacity: 0.07 }} />
-          <View style={{ width: 150, height: 150, borderRadius: 36, backgroundColor: '#ffffff14', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name={slide.icon} size={80} color={C.cream} />
-          </View>
-        </TouchableOpacity>
+          {slides.map((sl, i) => (
+            <View key={i} style={{ width: W, paddingHorizontal: 26, justifyContent: 'center' }}>
+              <View
+                style={{ height: 286, borderRadius: 28, backgroundColor: C.header, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', marginBottom: 28 }}
+              >
+                <View style={{ width: 150, height: 150, borderRadius: 36, backgroundColor: '#ffffff14', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name={sl.icon} size={80} color={C.cream} />
+                </View>
+              </View>
 
-        {/* Text content */}
-        <Text style={{ fontFamily: F.displayBold, fontSize: 30, fontWeight: '700', color: C.ink, lineHeight: 36, marginBottom: 10, textAlign: lang === 'ar' ? 'right' : 'left' }}>
-          {t(lang, slide.titleKey)}
-        </Text>
-        <Text style={{ fontSize: 14.5, color: C.mut, lineHeight: 22, maxWidth: 300, textAlign: lang === 'ar' ? 'right' : 'left' }}>
-          {t(lang, slide.bodyKey)}
-        </Text>
+              <Text style={{ fontFamily: F.displayBold, fontSize: 30, fontWeight: '700', color: C.ink, lineHeight: 36, marginBottom: 10, textAlign: lang === 'ar' ? 'right' : 'left' }}>
+                {t(lang, sl.titleKey)}
+              </Text>
+              <Text style={{ fontSize: 14.5, color: C.mut, lineHeight: 22, textAlign: lang === 'ar' ? 'right' : 'left' }}>
+                {t(lang, sl.bodyKey)}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Dots */}
       <View style={{ flexDirection: 'row', gap: 7, justifyContent: 'center', marginBottom: 22 }}>
         {slides.map((_, k) => (
-          <TouchableOpacity key={k} onPress={() => setIdx(k)} style={{ height: 7, borderRadius: 999, width: k === idx ? 26 : 7, backgroundColor: k === idx ? C.green : '#d8ddd3' }} />
+          <TouchableOpacity key={k} onPress={() => goTo(k)} style={{ height: 7, borderRadius: 999, width: k === idx ? 26 : 7, backgroundColor: k === idx ? C.green : '#d8ddd3' }} />
         ))}
       </View>
 
@@ -82,7 +102,13 @@ export function SplashScreen({ navigation }: any) {
         <Button
           full size="lg"
           iconRight={isLast ? 'arrowRight' : undefined}
-          onPress={() => isLast ? navigation.replace('register') : setIdx(idx + 1)}
+          onPress={() => {
+            if (isLast) {
+              navigation.replace('register');
+            } else {
+              goTo(idx + 1);
+            }
+          }}
         >
           {isLast ? t(lang, 'getStarted') : t(lang, 'next')}
         </Button>

@@ -21,11 +21,17 @@ export function BookTypeScreen({ navigation }: any) {
   const { store, lang, actions } = useApp();
   const n = getNursery(store.draft.nurseryId) || NURSERIES[0];
   const [type, setType] = useState<string>(store.draft.type || 'monthly');
-  const [child, setChild] = useState<string>(store.draft.childId || (store.children[0]?.id || ''));
+  const [children, setChildren] = useState<string[]>(
+    store.draft.childId ? [store.draft.childId] : store.children[0] ? [store.children[0].id] : []
+  );
   const isRTL = lang === 'ar';
 
+  const toggleChild = (id: string) => {
+    setChildren(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
   const cont = () => {
-    actions.setDraft({ type, childId: child, price: planPrice(type, n), unit: PLAN[type].unit, nurseryId: n.id, nurseryName: n.name });
+    actions.setDraft({ type, childId: children[0] || '', childIds: children, price: planPrice(type, n), unit: PLAN[type].unit, nurseryId: n.id, nurseryName: n.name });
     navigation.push('schedule', {});
   };
 
@@ -63,15 +69,17 @@ export function BookTypeScreen({ navigation }: any) {
         </View>
 
         <Text style={{ fontFamily: F.displayBold, fontSize: 17, fontWeight: '700', color: C.ink, marginBottom: 12, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'forWhichChild')}</Text>
+        <Text style={{ fontSize: 12, color: C.mut, marginBottom: 10 }}>Select one or more children</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
           {store.children.map(ch => {
-            const on = child === ch.id;
+            const on = children.includes(ch.id);
             return (
-              <TouchableOpacity key={ch.id} onPress={() => setChild(ch.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 9, paddingRight: 14, paddingLeft: 8, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, borderColor: on ? C.green : C.line, backgroundColor: on ? C.tint : '#fff' }}>
+              <TouchableOpacity key={ch.id} onPress={() => toggleChild(ch.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 9, paddingRight: 14, paddingLeft: 8, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, borderColor: on ? C.green : C.line, backgroundColor: on ? C.tint : '#fff' }}>
                 <View style={{ width: 32, height: 32, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.line }}>
-                  <AvatarImage seed={ch.id} size={32} />
+                  <AvatarImage seed={ch.id} size={32} uri={ch.photoUri || undefined} />
                 </View>
                 <Text style={{ fontSize: 13.5, fontWeight: '700', color: C.ink, fontFamily: F.bodyBold }}>{ch.name}</Text>
+                {on && <Icon name="check" size={15} color={C.dgreen} />}
               </TouchableOpacity>
             );
           })}
@@ -83,7 +91,7 @@ export function BookTypeScreen({ navigation }: any) {
       </ScrollView>
 
       <View style={{ padding: 22, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
-        <Button full size="lg" disabled={!child} iconRight="arrowRight" onPress={cont}>{t(lang, 'continue')}</Button>
+        <Button full size="lg" disabled={children.length === 0} iconRight="arrowRight" onPress={cont}>{t(lang, 'continue')}</Button>
       </View>
     </SafeAreaView>
   );

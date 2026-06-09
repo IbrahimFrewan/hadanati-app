@@ -51,7 +51,7 @@ export function ProfileScreen({ navigation }: any) {
         {/* Identity card */}
         <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 14, padding: 15, borderWidth: 1, borderColor: C.line, borderRadius: 18, marginBottom: 6 }}>
           <View style={{ width: 60, height: 60, borderRadius: 30, overflow: 'hidden', borderWidth: 1, borderColor: C.line, flexShrink: 0 }}>
-            <AvatarImage seed={store.user.name} size={60} />
+            <AvatarImage seed={store.user.name} size={60} uri={store.user.photoUri || undefined} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 2, textAlign: isRTL ? 'right' : 'left' }}>{store.user.name}</Text>
@@ -71,7 +71,7 @@ export function ProfileScreen({ navigation }: any) {
 
         <GroupTitle>{t(lang, 'notificationsTitle')}</GroupTitle>
         <View>
-          <Row icon="image" label={t(lang, 'dailyReports')} right={<Toggle on={prefs.reports} onChange={() => tog('reports')} />} isRTL={isRTL} />
+          <Row icon="image" label={t(lang, 'dailyReportsToggle')} right={<Toggle on={prefs.reports} onChange={() => tog('reports')} />} isRTL={isRTL} />
           <Row icon="checkCircle" label={t(lang, 'attendanceAlerts')} right={<Toggle on={prefs.attendance} onChange={() => tog('attendance')} />} isRTL={isRTL} />
           <Row icon="wallet" label={t(lang, 'paymentReminders')} right={<Toggle on={prefs.payments} onChange={() => tog('payments')} />} isRTL={isRTL} />
           <Row icon="gift" label={t(lang, 'offersNews')} right={<Toggle on={prefs.marketing} onChange={() => tog('marketing')} />} last isRTL={isRTL} />
