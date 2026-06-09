@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { TopBar, Pill, NurseryImage, AvailBadge, Rating, Verified, EmptyView } from '../components';
@@ -67,6 +67,7 @@ function ResultCard({ n, onPress }: { n: typeof NURSERIES[0]; onPress: () => voi
 
 export function ResultsScreen({ navigation, route }: any) {
   const { lang } = useApp();
+  const insets = useSafeAreaInsets();
   const initAges: string[] = route.params?.ages || [];
   const [ages, setAges] = useState(initAges);
   const [sort, setSort] = useState('distance');
@@ -109,7 +110,7 @@ export function ResultsScreen({ navigation, route }: any) {
       </View>
 
       {/* Filter chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingBottom: 12, maxHeight: 50 }} contentContainerStyle={{ paddingHorizontal: 18, gap: 8 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 12, gap: 8, alignItems: 'center' }}>
         <Pill icon="sliders" onPress={() => navigation.push('filters', {})}>{t(lang, 'filters')}</Pill>
         {ages.map(a => (
           <TouchableOpacity key={a} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.tint, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 11 }} onPress={() => setAges(ages.filter(x => x !== a))}>
@@ -131,11 +132,11 @@ export function ResultsScreen({ navigation, route }: any) {
       <Modal visible={sortSheet} transparent animationType="slide" onRequestClose={() => setSortSheet(false)}>
         <TouchableOpacity style={{ flex: 1, backgroundColor: '#1c281e66' }} onPress={() => setSortSheet(false)} activeOpacity={1}>
           <View style={{ flex: 1 }} />
-          <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, paddingTop: 14 }}>
+          <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, paddingTop: 14, paddingBottom: Math.max(insets.bottom, 20) }}>
             <View style={{ width: 40, height: 4, borderRadius: 999, backgroundColor: '#e7e2d6', alignSelf: 'center', marginBottom: 14 }} />
             <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 16 }}>{t(lang, 'sortBy')}</Text>
-            {Object.entries(SORTS).map(([k, v]) => (
-              <TouchableOpacity key={k} onPress={() => { setSort(k); setSortSheet(false); }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: C.line }}>
+            {Object.entries(SORTS).map(([k, v], i, arr) => (
+              <TouchableOpacity key={k} onPress={() => { setSort(k); setSortSheet(false); }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: i < arr.length - 1 ? 1 : 0, borderBottomColor: C.line }}>
                 <Text style={{ fontFamily: sort === k ? F.bodyBold : F.body, fontSize: 15, color: C.ink, fontWeight: sort === k ? '700' : '400' }}>{v}</Text>
                 {sort === k && <Icon name="check" size={19} color={C.green} />}
               </TouchableOpacity>
