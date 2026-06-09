@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { useApp } from '../context/AppContext';
@@ -58,6 +59,7 @@ function TabNavigator() {
 }
 
 function CustomTabBar({ state, navigation, unread, msgs, lang }: any) {
+  const insets = useSafeAreaInsets();
   const items = [
     { name: 'home', icon: 'home', label: t(lang, 'home') },
     { name: 'bookings', icon: 'calendar', label: t(lang, 'bookings') },
@@ -66,9 +68,10 @@ function CustomTabBar({ state, navigation, unread, msgs, lang }: any) {
     { name: 'profile', icon: 'user', label: t(lang, 'profile') },
   ];
   const badge: Record<string, number> = { notifications: unread, messages: msgs };
+  const bottomPad = Math.max(insets.bottom, 8) + 10;
 
   return (
-    <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.97)', borderTopWidth: 1, borderTopColor: C.line, paddingTop: 10, paddingBottom: 20 }}>
+    <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.97)', borderTopWidth: 1, borderTopColor: C.line, paddingTop: 10, paddingBottom: bottomPad }}>
       {items.map((item, idx) => {
         const focused = state.index === idx;
         const b = badge[item.name] || 0;

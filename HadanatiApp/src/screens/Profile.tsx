@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CommonActions } from '@react-navigation/native';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { Button, Toggle, AvatarImage, LangToggle } from '../components';
 import { useApp } from '../context/AppContext';
-import { Lang } from '../i18n';
-import { t } from '../i18n';
+import { Lang, t } from '../i18n';
 
 function GroupTitle({ children }: { children: string }) {
   return <Text style={{ marginTop: 22, marginBottom: 6, fontSize: 11.5, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: '#9aa195', fontFamily: F.bodyBold }}>{children}</Text>;
@@ -64,7 +64,7 @@ export function ProfileScreen({ navigation }: any) {
 
         <GroupTitle>{t(lang, 'family')}</GroupTitle>
         <View>
-          <Row icon="users" label={t(lang, 'myChildren')} value={`${store.children.length}`} onPress={() => navigation.navigate('children')} isRTL={isRTL} />
+          <Row icon="users" label={t(lang, 'myChildren')} value={`${store.children.length}`} onPress={() => navigation.getParent()?.navigate('children')} isRTL={isRTL} />
           <Row icon="heart" label={t(lang, 'savedNurseries')} value={`${store.favorites.length}`} onPress={() => navigation.navigate('home')} isRTL={isRTL} />
           <Row icon="wallet" label={t(lang, 'paymentMethods')} value={t(lang, 'oneCard')} onPress={() => {}} last isRTL={isRTL} />
         </View>
@@ -85,7 +85,7 @@ export function ProfileScreen({ navigation }: any) {
             right={<LangToggle lang={uiLang} onSet={handleLang} />}
             isRTL={isRTL}
           />
-          <Row icon="info" label={t(lang, 'helpSupport')} onPress={() => navigation.navigate('support')} isRTL={isRTL} />
+          <Row icon="info" label={t(lang, 'helpSupport')} onPress={() => navigation.getParent()?.navigate('support')} isRTL={isRTL} />
           <Row icon="shield" label={t(lang, 'termsPrivacy')} onPress={() => {}} last isRTL={isRTL} />
         </View>
 
@@ -96,7 +96,7 @@ export function ProfileScreen({ navigation }: any) {
         </View>
 
         <View style={{ marginTop: 12 }}>
-          <Row icon="logout" label={t(lang, 'logOut')} onPress={() => navigation.reset({ index: 0, routes: [{ name: 'splash' }] })} isRTL={isRTL} />
+          <Row icon="logout" label={t(lang, 'logOut')} onPress={() => navigation.getParent()?.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'splash' }] }))} isRTL={isRTL} />
           <Row icon="trash" label={t(lang, 'deleteAccount')} danger onPress={() => setShowDelete(true)} last isRTL={isRTL} />
         </View>
       </ScrollView>

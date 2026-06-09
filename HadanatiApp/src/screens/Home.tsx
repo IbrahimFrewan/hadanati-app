@@ -1,14 +1,31 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, Modal, FlatList,
+  View, Text, TouchableOpacity, ScrollView, Modal, FlatList, TextInput,
 } from 'react-native';
+import Svg, { Defs, LinearGradient as SVGGrad, Stop, Rect as SVGRect } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { SectionTitle, NurseryImage, AvatarImage, AvailBadge, Rating } from '../components';
 import { useApp } from '../context/AppContext';
-import { NURSERIES, DISTRICTS, AGE_GROUPS } from '../data';
+import { NURSERIES, DISTRICTS } from '../data';
 import { t } from '../i18n';
+
+function CardGradient({ height }: { height: number }) {
+  return (
+    <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height }} pointerEvents="none">
+      <Svg height={height} width="100%" preserveAspectRatio="none">
+        <Defs>
+          <SVGGrad id="cg" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0.3" stopColor="#000000" stopOpacity={0} />
+            <Stop offset="1" stopColor="#1a3322" stopOpacity={0.85} />
+          </SVGGrad>
+        </Defs>
+        <SVGRect x="0" y="0" width="100%" height={height} fill="url(#cg)" />
+      </Svg>
+    </View>
+  );
+}
 
 function FavBtn({ id }: { id: string }) {
   const { store, actions } = useApp();
@@ -26,7 +43,7 @@ function FeatureCard({ n, big, onPress }: { n: typeof NURSERIES[0]; big?: boolea
     <TouchableOpacity onPress={onPress} style={{ width: big ? '100%' : 268, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: C.line, backgroundColor: '#fff' }}>
       <View style={{ height: big ? 168 : 138, position: 'relative' }}>
         <NurseryImage src={n.img} seed={n.id} radius={0} />
-        <View style={{ position: 'absolute', inset: 0, backgroundColor: 'transparent', background: 'linear-gradient(180deg,#0000 40%,#1c3324cc)' }} />
+        <CardGradient height={big ? 168 : 138} />
         {n.sponsored && (
           <View style={{ position: 'absolute', top: 13, left: 13, backgroundColor: C.amber, borderRadius: 6, paddingVertical: 4, paddingHorizontal: 9 }}>
             <Text style={{ color: '#3a2c08', fontSize: 9.5, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase' }}>{t(lang, 'sponsored')}</Text>
@@ -76,24 +93,44 @@ function ListRow({ n, onPress }: { n: typeof NURSERIES[0]; onPress: () => void }
 
 function DistrictSheet({ open, district, onPick, onClose }: { open: boolean; district: string; onPick: (d: string) => void; onClose: () => void }) {
   const { lang } = useApp();
+  const [q, setQ] = useState('');
+  const filtered = q.trim() ? DISTRICTS.filter(d => d.toLowerCase().includes(q.toLowerCase())) : DISTRICTS;
+  const isRTL = lang === 'ar';
+
   if (!open) return null;
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableOpacity style={{ flex: 1, backgroundColor: '#2b3a2e55' }} onPress={onClose} activeOpacity={1}>
         <View style={{ flex: 1 }} />
-        <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 18, paddingTop: 14, maxHeight: '72%' }}>
+        <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 18, paddingTop: 14, maxHeight: '78%' }}>
           <View style={{ width: 40, height: 4, borderRadius: 999, backgroundColor: '#e7e2d6', alignSelf: 'center', marginBottom: 16 }} />
-          <Text style={{ fontFamily: F.displayBold, fontSize: 19, color: C.ink, marginBottom: 4 }}>{t(lang, 'chooseArea')}</Text>
-          <Text style={{ fontSize: 12.5, color: C.mut, marginBottom: 14 }}>{t(lang, 'amman')}</Text>
+          <Text style={{ fontFamily: F.displayBold, fontSize: 19, color: C.ink, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'chooseArea')}</Text>
+          <Text style={{ fontSize: 12.5, color: C.mut, marginBottom: 12, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'amman')}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: C.cream, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 10, marginBottom: 10 }}>
+            <Icon name="search" size={17} color={C.mut} />
+            <TextInput
+              value={q}
+              onChangeText={setQ}
+              placeholder={lang === 'ar' ? 'ابحث عن منطقة…' : 'Search areas…'}
+              placeholderTextColor={C.mut}
+              style={{ flex: 1, fontSize: 14, color: C.ink, fontFamily: F.body, padding: 0, textAlign: isRTL ? 'right' : 'left' }}
+            />
+            {q.length > 0 && (
+              <TouchableOpacity onPress={() => setQ('')}>
+                <Icon name="x" size={16} color={C.mut} />
+              </TouchableOpacity>
+            )}
+          </View>
           <FlatList
-            data={DISTRICTS}
+            data={filtered}
             keyExtractor={d => d}
+            keyboardShouldPersistTaps="handled"
             renderItem={({ item: d }) => (
-              <TouchableOpacity onPress={() => onPick(d)} style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 13, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: '#ebe5d7' }}>
+              <TouchableOpacity onPress={() => { onPick(d); setQ(''); }} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 11, paddingVertical: 13, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: '#ebe5d7' }}>
                 <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: d === district ? C.green + '1f' : '#f6f3ea', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="pin" size={16} color={d === district ? C.green : C.mut} />
                 </View>
-                <Text style={{ flex: 1, fontSize: 14.5, color: C.ink, fontWeight: d === district ? '600' : '400', fontFamily: d === district ? F.bodyBold : F.body }}>{d}</Text>
+                <Text style={{ flex: 1, fontSize: 14.5, color: C.ink, fontWeight: d === district ? '600' : '400', fontFamily: d === district ? F.bodyBold : F.body, textAlign: isRTL ? 'right' : 'left' }}>{d}</Text>
                 {d === district && <Icon name="check" size={18} color={C.green} />}
               </TouchableOpacity>
             )}
@@ -168,19 +205,6 @@ export function HomeScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* Age quick-filters */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 14, marginHorizontal: -22 }} contentContainerStyle={{ paddingHorizontal: 22, gap: 9 }}>
-            {AGE_GROUPS.map(a => (
-              <TouchableOpacity
-                key={a.id}
-                onPress={() => navigation.push('results', { ages: [a.id] })}
-                style={{ flexShrink: 0, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', borderRadius: 14, paddingVertical: 9, paddingHorizontal: 16 }}
-              >
-                <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, fontFamily: F.bodyBold }}>{t(lang, a.label)}</Text>
-                <Text style={{ fontSize: 11, color: C.mut }}>{t(lang, a.sub)}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </View>
 
         <View style={{ paddingHorizontal: 22, paddingTop: 22 }}>
