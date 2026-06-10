@@ -128,15 +128,17 @@ export function ResultsScreen({ navigation, route }: any) {
       </View>
 
       {/* Filter chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }} contentContainerStyle={{ paddingHorizontal: 18, paddingVertical: 5, gap: 8 }}>
-        <Pill icon="sliders" onPress={() => navigation.push('filters', {})}>{t(lang, 'filters')}</Pill>
-        {ages.map(a => (
-          <TouchableOpacity key={a} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.tint, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 11 }} onPress={() => setAges(ages.filter(x => x !== a))}>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: C.dgreen, fontFamily: F.bodyBold }}>{AGE_LABEL[a]}</Text>
-            <Icon name="x" size={13} color={C.dgreen} />
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={{ height: 46, marginBottom: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, gap: 8, alignItems: 'center', flexGrow: 1 }}>
+          <Pill icon="sliders" onPress={() => navigation.push('filters', {})}>{t(lang, 'filters')}</Pill>
+          {ages.map(a => (
+            <TouchableOpacity key={a} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.tint, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 11 }} onPress={() => setAges(ages.filter(x => x !== a))}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: C.dgreen, fontFamily: F.bodyBold }}>{AGE_LABEL[a]}</Text>
+              <Icon name="x" size={13} color={C.dgreen} />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       <FlatList
         data={list}
