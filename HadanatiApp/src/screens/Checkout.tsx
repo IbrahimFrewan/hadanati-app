@@ -11,7 +11,8 @@ import { t } from '../i18n';
 export function CheckoutScreen({ navigation }: any) {
   const { store, lang, actions } = useApp();
   const n = getNursery(store.draft.nurseryId) || NURSERIES[0];
-  const child = store.children.find(c => c.id === store.draft.childId);
+  const childIds: string[] = store.draft.childIds?.length ? store.draft.childIds : (store.draft.childId ? [store.draft.childId] : []);
+  const childNames = childIds.map(id => store.children.find(c => c.id === id)?.name).filter(Boolean).join(' & ') || 'Child';
   const type = store.draft.type || 'monthly';
   const sub = store.draft.price || 160;
   const fee = Math.round(sub * 0.05);
@@ -68,7 +69,7 @@ export function CheckoutScreen({ navigation }: any) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 3 }}>{n.name}</Text>
-              <Text style={{ fontSize: 12, color: C.mut }}>{t(lang, type)} · {child ? child.name : 'Child'}</Text>
+              <Text style={{ fontSize: 12, color: C.mut }}>{t(lang, type)} · {childNames}</Text>
             </View>
           </View>
           <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, paddingTop: 11, borderTopWidth: 1, borderTopColor: C.line }}>
