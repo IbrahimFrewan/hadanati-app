@@ -8,6 +8,7 @@ import { Icon } from '../components/Icon';
 import { useApp } from '../context/AppContext';
 
 // Screens
+import { BrandSplashScreen } from '../screens/BrandSplash';
 import { SplashScreen } from '../screens/Splash';
 import { LoginScreen } from '../screens/Login';
 import { RegisterScreen } from '../screens/Register';
@@ -99,6 +100,7 @@ function CustomTabBar({ state, navigation, unread, msgs, lang }: any) {
 export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: C.page } }}>
+      <Stack.Screen name="brandSplash" component={BrandSplashScreen} options={{ cardStyle: { backgroundColor: '#8ea870' } }} />
       <Stack.Screen name="splash" component={SplashScreen} />
       <Stack.Screen name="login" component={LoginScreen} />
       <Stack.Screen name="register" component={RegisterScreen} />

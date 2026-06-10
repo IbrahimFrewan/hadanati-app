@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Modal, FlatList, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
@@ -70,6 +70,7 @@ export function ResultsScreen({ navigation, route }: any) {
   const insets = useSafeAreaInsets();
   const initAges: string[] = route.params?.ages || [];
   const [ages, setAges] = useState(initAges);
+  const [query, setQuery] = useState('');
   const [sort, setSort] = useState('distance');
   const [sortSheet, setSortSheet] = useState(false);
   const SORTS: Record<string, string> = {
@@ -80,7 +81,12 @@ export function ResultsScreen({ navigation, route }: any) {
   };
   const AGE_LABEL: Record<string, string> = { infant: t(lang, 'infant'), toddler: t(lang, 'toddler'), preschool: t(lang, 'preschool') };
 
-  let list = NURSERIES.filter(n => ages.length ? n.ages.some(a => ages.includes(a)) : true);
+  const q = query.toLowerCase().trim();
+  let list = NURSERIES.filter(n => {
+    const matchAge = ages.length ? n.ages.some(a => ages.includes(a)) : true;
+    const matchQ = q ? (n.name.toLowerCase().includes(q) || n.district.toLowerCase().includes(q) || n.tag.toLowerCase().includes(q)) : true;
+    return matchAge && matchQ;
+  });
   if (sort === 'price') list = [...list].sort((a, b) => a.priceFrom - b.priceFrom);
   if (sort === 'rating') list = [...list].sort((a, b) => b.rating - a.rating);
 
@@ -99,10 +105,22 @@ export function ResultsScreen({ navigation, route }: any) {
 
       {/* Search + sort */}
       <View style={{ paddingHorizontal: 18, paddingBottom: 12, flexDirection: 'row', gap: 9 }}>
-        <TouchableOpacity onPress={() => navigation.push('filters', {})} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 13, height: 44 }}>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 13, height: 44 }}>
           <Icon name="search" size={18} color={C.mut} />
-          <Text style={{ fontSize: 13.5, color: C.mut, fontFamily: F.body }}>{t(lang, 'searchNurseries')}</Text>
-        </TouchableOpacity>
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder={t(lang, 'searchNurseries')}
+            placeholderTextColor={C.mut}
+            style={{ flex: 1, fontSize: 13.5, color: C.ink, fontFamily: F.body, padding: 0 }}
+            returnKeyType="search"
+          />
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => setQuery('')}>
+              <Icon name="x" size={16} color={C.mut} />
+            </TouchableOpacity>
+          )}
+        </View>
         <TouchableOpacity onPress={() => setSortSheet(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 13, height: 44 }}>
           <Icon name="list" size={16} color={C.mut} />
           <Text style={{ fontFamily: F.bodyBold, fontSize: 13, fontWeight: '600', color: C.ink }}>{SORTS[sort]}</Text>
@@ -110,7 +128,7 @@ export function ResultsScreen({ navigation, route }: any) {
       </View>
 
       {/* Filter chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 12, gap: 8, alignItems: 'center' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }} contentContainerStyle={{ paddingHorizontal: 18, paddingVertical: 5, gap: 8 }}>
         <Pill icon="sliders" onPress={() => navigation.push('filters', {})}>{t(lang, 'filters')}</Pill>
         {ages.map(a => (
           <TouchableOpacity key={a} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.tint, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 11 }} onPress={() => setAges(ages.filter(x => x !== a))}>

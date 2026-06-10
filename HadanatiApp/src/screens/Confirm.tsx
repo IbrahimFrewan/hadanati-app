@@ -13,7 +13,8 @@ const PLAN_LABEL: Record<string, string> = { hourly: 'Hourly', daily: 'Daily', w
 export function ConfirmScreen({ navigation }: any) {
   const { store, lang } = useApp();
   const n = getNursery(store.draft.nurseryId);
-  const child = store.children.find(c => c.id === store.draft.childId);
+  const childIds: string[] = store.draft.childIds?.length ? store.draft.childIds : (store.draft.childId ? [store.draft.childId] : []);
+  const childNames = childIds.map((id: string) => store.children.find(c => c.id === id)?.name).filter(Boolean).join(' & ') || 'Your child';
   const ref = 'HD-' + (store.draft.bookingId || 'b3').toUpperCase() + '-2026';
   const isRTL = lang === 'ar';
 
@@ -28,14 +29,14 @@ export function ConfirmScreen({ navigation }: any) {
           </View>
           <Text style={{ fontFamily: F.displayBold, fontSize: 30, fontWeight: '700', color: C.cream, textAlign: 'center', marginBottom: 8 }}>{t(lang, 'youreBooked')}</Text>
           <Text style={{ fontSize: 14, color: C.cream, opacity: 0.85, lineHeight: 22, textAlign: 'center', marginBottom: 4 }}>
-            {child ? child.name : 'Your child'}{t(lang, 'spotConfirmed')}<Text style={{ fontWeight: '700' }}>{n?.name || ''}</Text>{t(lang, 'spotConfirmed2')}
+            {childNames}{t(lang, 'spotConfirmed')}<Text style={{ fontWeight: '700' }}>{n?.name || ''}</Text>{t(lang, 'spotConfirmed2')}
           </Text>
           <Text style={{ fontSize: 12, color: C.cream, opacity: 0.65 }}>Ref {ref}</Text>
         </View>
 
         <View style={{ backgroundColor: '#fff', borderRadius: 26, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: 22, paddingBottom: 26 }}>
           <View style={{ gap: 12, marginBottom: 18 }}>
-            {[[  'calendar', store.draft.dates || 'Upcoming'], ['users', `${PLAN_LABEL[store.draft.type || 'monthly']} · ${child?.name || ''}`]].map(([ic, v]) => (
+            {[['calendar', store.draft.dates || 'Upcoming'], ['users', `${PLAN_LABEL[store.draft.type || 'monthly']} · ${childNames}`]].map(([ic, v]) => (
               <View key={ic} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 11 }}>
                 <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name={ic as any} size={18} color={C.dgreen} />
