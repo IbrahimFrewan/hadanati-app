@@ -30,8 +30,10 @@ export function BookTypeScreen({ navigation }: any) {
     setChildren(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
+  const totalPrice = planPrice(type, n) * Math.max(children.length, 1);
+
   const cont = () => {
-    actions.setDraft({ type, childId: children[0] || '', childIds: children, price: planPrice(type, n), unit: PLAN[type].unit, nurseryId: n.id, nurseryName: n.name });
+    actions.setDraft({ type, childId: children[0] || '', childIds: children, price: totalPrice, unit: PLAN[type].unit, nurseryId: n.id, nurseryName: n.name });
     navigation.push('schedule', {});
   };
 
@@ -91,6 +93,12 @@ export function BookTypeScreen({ navigation }: any) {
       </ScrollView>
 
       <View style={{ padding: 22, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
+        {children.length > 1 && (
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+            <Text style={{ fontSize: 13, color: C.mut }}>{children.length} {t(lang, 'children')} × {planPrice(type, n)} JD/{PLAN[type].unit}</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: C.dgreen, fontFamily: F.displayBold }}>{totalPrice} JD/{PLAN[type].unit}</Text>
+          </View>
+        )}
         <Button full size="lg" disabled={children.length === 0} iconRight="arrowRight" onPress={cont}>{t(lang, 'continue')}</Button>
       </View>
     </SafeAreaView>

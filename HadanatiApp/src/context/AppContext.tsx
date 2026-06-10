@@ -78,7 +78,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     confirmBooking: () => setStore(s => {
       const d = s.draft;
       const id = 'b' + (s.bookings.length + 1);
-      const nb: Booking = { id, nurseryId: d.nurseryId, childId: d.childId, type: d.type, status: 'confirmed', dates: d.dates || 'Upcoming', price: d.price, unit: d.unit };
+      const childIds: string[] = d.childIds || (d.childId ? [d.childId] : []);
+      const nb: Booking = { id, nurseryId: d.nurseryId, childId: d.childId, childIds, type: d.type, status: 'confirmed', dates: d.dates || 'Upcoming', price: d.price, unit: d.unit };
       return { ...s, bookings: [nb, ...s.bookings], draft: { ...s.draft, bookingId: id } };
     }),
     readNotifs: () => setStore(s => ({ ...s, notifications: s.notifications.map(n => ({ ...n, read: true })) })),

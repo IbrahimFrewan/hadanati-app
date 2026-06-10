@@ -298,6 +298,9 @@ export const strings: Record<Lang, Record<string, string>> = {
     // Favorites
     addedToFav: 'Added to saved nurseries ❤️',
     removedFromFav: 'Removed from saved nurseries',
+    // Nursery
+    videoComingSoon: 'Video tour coming soon',
+    children: 'children',
     // Common
     jd: 'JD',
     mo: '/mo',
@@ -616,6 +619,9 @@ export const strings: Record<Lang, Record<string, string>> = {
     // Favorites
     addedToFav: 'أُضيفت للحضانات المحفوظة ❤️',
     removedFromFav: 'حُذفت من الحضانات المحفوظة',
+    // Nursery
+    videoComingSoon: 'جولة الفيديو قريباً',
+    children: 'أطفال',
     backToHome: 'العودة للرئيسية',
     comingSoon: ' قريباً',
     comingSoonBody: 'هذه الشاشة ستكون ضمن الدفعة القادمة.',

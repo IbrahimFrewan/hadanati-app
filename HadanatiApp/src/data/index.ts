@@ -47,7 +47,7 @@ export const NURSERIES: Nursery[] = [
 export const getNursery = (id: string) => NURSERIES.find(n => n.id === id);
 
 export type Child = { id: string; name: string; dob: string; ageGroup: string; allergies: string; photoUri: string };
-export type Booking = { id: string; nurseryId: string; childId: string; type: string; status: string; dates: string; price: number; unit: string };
+export type Booking = { id: string; nurseryId: string; childId: string; childIds?: string[]; type: string; status: string; dates: string; price: number; unit: string };
 export type Notification = { id: string; kind: string; title: string; body: string; time: string; read: boolean; target: string | null };
 export type Message = { me: boolean; text: string; time: string };
 export type Thread = { id: string; nurseryId: string; unread: number; last: string; time: string; messages: Message[] };

@@ -55,7 +55,7 @@ export function MessagesScreen({ navigation }: any) {
               </View>
             )}
           />
-          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', padding: 16, paddingBottom: Math.max(insets.bottom, 14), borderTopWidth: 1, borderTopColor: C.line, gap: 9, alignItems: 'center', backgroundColor: C.page }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', padding: 16, paddingBottom: 10, borderTopWidth: 1, borderTopColor: C.line, gap: 9, alignItems: 'center', backgroundColor: C.page }}>
             <TouchableOpacity style={{ width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon name="paperclip" size={19} color={C.mut} />
             </TouchableOpacity>

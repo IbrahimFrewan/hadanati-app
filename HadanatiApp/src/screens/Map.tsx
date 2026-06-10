@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { C, F } from '../theme';
@@ -121,6 +121,9 @@ export function MapScreen({ navigation }: any) {
   const [mapHtml, setMapHtml] = useState(() => buildMapHtml(NURSERIES));
   const webRef = useRef<any>(null);
   const isRTL = lang === 'ar';
+  const insets = useSafeAreaInsets();
+  const cardBottom = insets.bottom + 16;
+  const btnBottom = sel ? cardBottom + 112 : insets.bottom + 16;
 
   const locateMe = async () => {
     setLocating(true);
@@ -184,7 +187,7 @@ export function MapScreen({ navigation }: any) {
       {/* Locate me button */}
       <TouchableOpacity
         onPress={locateMe}
-        style={{ position: 'absolute', right: 16, bottom: sel ? 188 : 36, zIndex: 3, width: 48, height: 48, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 8, elevation: 5 }}
+        style={{ position: 'absolute', right: 16, bottom: btnBottom, zIndex: 3, width: 48, height: 48, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 8, elevation: 5 }}
       >
         {locating ? <ActivityIndicator size="small" color={C.green} /> : <Icon name="crosshair" size={22} color={C.green} />}
       </TouchableOpacity>
@@ -192,7 +195,7 @@ export function MapScreen({ navigation }: any) {
       {/* Search this area button */}
       <TouchableOpacity
         onPress={() => setSel(null)}
-        style={{ position: 'absolute', bottom: sel ? 188 : 36, alignSelf: 'center', zIndex: 3, backgroundColor: '#fff', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 18, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, elevation: 4, flexDirection: 'row', alignItems: 'center', gap: 7 }}
+        style={{ position: 'absolute', bottom: btnBottom, alignSelf: 'center', zIndex: 3, backgroundColor: '#fff', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 18, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, elevation: 4, flexDirection: 'row', alignItems: 'center', gap: 7 }}
       >
         <Icon name="refresh" size={16} color={C.dgreen} />
         <Text style={{ fontFamily: F.bodyBold, fontWeight: '700', fontSize: 13, color: C.dgreen }}>{t(lang, 'searchThisArea')}</Text>
@@ -202,7 +205,7 @@ export function MapScreen({ navigation }: any) {
       {sel && (
         <TouchableOpacity
           onPress={() => navigation.push('nursery', { id: sel.id })}
-          style={{ position: 'absolute', left: 16, right: 16, bottom: 24, zIndex: 4, backgroundColor: '#fff', borderRadius: 18, padding: 12, flexDirection: 'row', gap: 12, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 15, elevation: 8 }}
+          style={{ position: 'absolute', left: 16, right: 16, bottom: cardBottom, zIndex: 4, backgroundColor: '#fff', borderRadius: 18, padding: 12, flexDirection: 'row', gap: 12, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 15, elevation: 8 }}
         >
           <View style={{ width: 70, height: 70, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
             <NurseryImage src={sel.img} seed={sel.id} radius={12} />

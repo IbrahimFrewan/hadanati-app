@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { Button, StatusPill, NurseryImage, EmptyView } from '../components';
@@ -20,8 +20,13 @@ export function BookingsScreen({ navigation }: any) {
   const [tab, setTab] = useState('active');
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const isRTL = lang === 'ar';
+  const insets = useSafeAreaInsets();
 
   const child = (id: string) => store.children.find(c => c.id === id);
+  const childNames = (b: any) => {
+    const ids: string[] = b.childIds?.length ? b.childIds : (b.childId ? [b.childId] : []);
+    return ids.map((id: string) => child(id)?.name).filter(Boolean).join(', ');
+  };
   const list = store.bookings.filter(b => TABS[tab].includes(b.status));
 
   const doCancel = () => {
@@ -73,7 +78,7 @@ export function BookingsScreen({ navigation }: any) {
           />
         }
         renderItem={({ item: b }) => {
-          const n = getNursery(b.nurseryId); const ch = child(b.childId); if (!n) return null;
+          const n = getNursery(b.nurseryId); if (!n) return null;
           return (
             <View style={{ borderWidth: 1, borderColor: C.line, borderRadius: 18, overflow: 'hidden', backgroundColor: '#fff', flexShrink: 0 }}>
               <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 13, padding: 13 }}>
@@ -85,7 +90,7 @@ export function BookingsScreen({ navigation }: any) {
                     <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, flex: 1 }} numberOfLines={1}>{n.name}</Text>
                     <StatusPill status={b.status} label={STATUS_LABELS[b.status]} />
                   </View>
-                  <Text style={{ fontSize: 12, color: C.mut, marginBottom: 5 }}>{PLAN_LABEL[b.type]} · {ch?.name || ''}</Text>
+                  <Text style={{ fontSize: 12, color: C.mut, marginBottom: 5 }}>{PLAN_LABEL[b.type]} · {childNames(b)}</Text>
                   <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 5 }}>
                     <Icon name="calendar" size={13} color={C.dgreen} />
                     <Text style={{ fontSize: 12, color: C.ink, fontWeight: '600', fontFamily: F.bodyBold }}>{b.dates}</Text>
@@ -130,34 +135,33 @@ export function BookingsScreen({ navigation }: any) {
         }}
       />
 
-      {/* Cancel sheet */}
-      <Modal visible={!!cancelTarget} transparent animationType="slide" onRequestClose={() => setCancelTarget(null)}>
-        <TouchableOpacity style={{ flex: 1, backgroundColor: '#1c281e66' }} onPress={() => setCancelTarget(null)} activeOpacity={1}>
+      {cancelTarget && (
+        <TouchableOpacity
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#1c281e66', zIndex: 10 }}
+          onPress={() => setCancelTarget(null)}
+          activeOpacity={1}
+        >
           <View style={{ flex: 1 }} />
-          <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, paddingTop: 14 }}>
+          <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, paddingTop: 14, paddingBottom: Math.max(insets.bottom, 20) }} onPress={e => e.stopPropagation()}>
             <View style={{ width: 40, height: 4, borderRadius: 999, backgroundColor: '#e7e2d6', alignSelf: 'center', marginBottom: 14 }} />
             <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 16 }}>{t(lang, 'cancelBooking')}</Text>
-            {cancelTarget && (
-              <>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10, backgroundColor: '#e4f1e6', borderRadius: 12, padding: 13, marginBottom: 16 }}>
-                  <Icon name="checkCircle" size={20} color="#2f7a44" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#2f7a44', fontFamily: F.bodyBold }}>{t(lang, 'fullRefund')}{cancelTarget.price} JD</Text>
-                    <Text style={{ fontSize: 11.5, color: '#3d7a4f' }}>{t(lang, 'cancelEarly')}</Text>
-                  </View>
-                </View>
-                <Text style={{ fontSize: 13, color: C.mut, lineHeight: 20, marginBottom: 18 }}>
-                  {t(lang, 'cancelInfo')}{cancelTarget.n.name}{t(lang, 'cancelInfo2')}
-                </Text>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 11 }}>
-                  <Button variant="secondary" onPress={() => setCancelTarget(null)} style={{ flex: 1 }}>{t(lang, 'keepBooking')}</Button>
-                  <Button variant="danger" onPress={doCancel} style={{ flex: 1 }}>{t(lang, 'cancelRefund')}</Button>
-                </View>
-              </>
-            )}
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10, backgroundColor: '#e4f1e6', borderRadius: 12, padding: 13, marginBottom: 16 }}>
+              <Icon name="checkCircle" size={20} color="#2f7a44" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#2f7a44', fontFamily: F.bodyBold }}>{t(lang, 'fullRefund')}{cancelTarget.price} JD</Text>
+                <Text style={{ fontSize: 11.5, color: '#3d7a4f' }}>{t(lang, 'cancelEarly')}</Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 13, color: C.mut, lineHeight: 20, marginBottom: 18 }}>
+              {t(lang, 'cancelInfo')}{cancelTarget.n.name}{t(lang, 'cancelInfo2')}
+            </Text>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 11 }}>
+              <Button variant="secondary" onPress={() => setCancelTarget(null)} style={{ flex: 1 }}>{t(lang, 'keepBooking')}</Button>
+              <Button variant="danger" onPress={doCancel} style={{ flex: 1 }}>{t(lang, 'cancelRefund')}</Button>
+            </View>
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
+      )}
     </SafeAreaView>
   );
 }

@@ -29,6 +29,7 @@ import { ReportDetailScreen } from '../screens/ReportDetail';
 import { MessagesScreen } from '../screens/Messages';
 import { NotificationsScreen } from '../screens/Notifications';
 import { ReviewScreen } from '../screens/Review';
+import { AllReviewsScreen } from '../screens/AllReviews';
 import { ProfileScreen } from '../screens/Profile';
 import { SupportScreen } from '../screens/Support';
 import { t } from '../i18n';
@@ -116,6 +117,7 @@ export function RootNavigator() {
       <Stack.Screen name="reportFeed" component={ReportFeedScreen} />
       <Stack.Screen name="reportDetail" component={ReportDetailScreen} />
       <Stack.Screen name="review" component={ReviewScreen} />
+      <Stack.Screen name="allReviews" component={AllReviewsScreen} />
       <Stack.Screen name="support" component={SupportScreen} />
     </Stack.Navigator>
   );

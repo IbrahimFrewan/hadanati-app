@@ -1,12 +1,35 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Dimensions, FlatList } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { Button, NurseryImage, AvailBadge, Rating, Verified } from '../components';
 import { useApp } from '../context/AppContext';
 import { NURSERIES, getNursery } from '../data';
 import { t } from '../i18n';
+
+function buildLocationHtml(lat: number, lng: number) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>body,html{margin:0;padding:0;height:100%;width:100%;}#map{height:100%;width:100%;}</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+var map=L.map('map',{zoomControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false}).setView([${lat},${lng}],15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+var icon=L.divIcon({html:'<div style="width:22px;height:22px;border-radius:50%;background:#2f5e41;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.35)"></div>',className:'',iconSize:[22,22],iconAnchor:[11,11]});
+L.marker([${lat},${lng}],{icon:icon}).addTo(map);
+</script>
+</body>
+</html>`;
+}
 
 const { width: W } = Dimensions.get('window');
 
@@ -26,6 +49,7 @@ function FavBtn({ id, size = 32 }: { id: string; size?: number }) {
 }
 
 function GalleryHeader({ n, navigation, isRTL }: { n: typeof NURSERIES[0]; navigation: any; isRTL: boolean }) {
+  const { actions, lang } = useApp();
   const [idx, setIdx] = useState(0);
   const flatRef = useRef<FlatList>(null);
   const items = GALLERY_SEEDS.map((s, i) => ({ key: s, img: n.img, seed: n.id + s }));
@@ -43,7 +67,7 @@ function GalleryHeader({ n, navigation, isRTL }: { n: typeof NURSERIES[0]; navig
         renderItem={({ item }) => (
           <View style={{ width: W, height: 280 }}>
             <NurseryImage src={item.img} seed={item.seed} radius={0} />
-            <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(28,51,36,0.35)' }} />
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(28,51,36,0.35)' }} />
           </View>
         )}
       />
@@ -51,7 +75,7 @@ function GalleryHeader({ n, navigation, isRTL }: { n: typeof NURSERIES[0]; navig
       {/* Dot indicators */}
       <View style={{ position: 'absolute', bottom: 50, alignSelf: 'center', flexDirection: 'row', gap: 5 }}>
         {items.map((_, i) => (
-          <View key={i} style={{ width: i === idx ? 18 : 6, height: 6, borderRadius: 3, backgroundColor: i === idx ? '#fff' : 'rgba(255,255,255,0.5)', transition: 'width 0.2s' as any }} />
+          <View key={i} style={{ width: i === idx ? 18 : 6, height: 6, borderRadius: 3, backgroundColor: i === idx ? '#fff' : 'rgba(255,255,255,0.5)' }} />
         ))}
       </View>
 
@@ -76,9 +100,9 @@ function GalleryHeader({ n, navigation, isRTL }: { n: typeof NURSERIES[0]; navig
           style={{ backgroundColor: idx === 0 ? '#fff' : 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
           <Text style={{ color: idx === 0 ? C.dgreen : '#fff', fontSize: 11, fontWeight: '700' }}>Photos</Text>
         </TouchableOpacity>
-        <View style={{ backgroundColor: 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
+        <TouchableOpacity onPress={() => actions.showToast(t(lang, 'videoComingSoon'))} style={{ backgroundColor: 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
           <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>▶ video</Text>
-        </View>
+        </TouchableOpacity>
         <View style={{ backgroundColor: 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
           <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>{idx + 1}/{items.length}</Text>
         </View>
@@ -212,8 +236,14 @@ export function NurseryScreen({ navigation, route }: any) {
         </Section>
 
         <Section title={t(lang, 'location')}>
-          <View style={{ height: 150, borderRadius: 14, overflow: 'hidden', backgroundColor: '#e8ece4', position: 'relative' }}>
-            <View style={{ position: 'absolute', top: '50%', left: '50%', width: 120, height: 120, borderRadius: 60, backgroundColor: '#3f8a5a22', borderWidth: 1, borderColor: '#3f8a5a66', transform: [{ translateX: -60 }, { translateY: -60 }] }} />
+          <View style={{ height: 160, borderRadius: 14, overflow: 'hidden', position: 'relative' }}>
+            <WebView
+              source={{ html: buildLocationHtml(n.lat, n.lng) }}
+              style={{ flex: 1 }}
+              javaScriptEnabled
+              scrollEnabled={false}
+              originWhitelist={['*']}
+            />
             <View style={{ position: 'absolute', bottom: 10, left: 10, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 999, paddingVertical: 5, paddingHorizontal: 11, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <Icon name="info" size={13} color={C.mut} />
               <Text style={{ fontSize: 11, fontWeight: '600', color: C.mut }}>{t(lang, 'exactAddressAfterBooking')}</Text>
@@ -221,7 +251,7 @@ export function NurseryScreen({ navigation, route }: any) {
           </View>
         </Section>
 
-        <Section title={t(lang, 'reviews')} action={t(lang, 'seeAll')} onAction={() => {}}>
+        <Section title={t(lang, 'reviews')} action={t(lang, 'seeAll')} onAction={() => navigation.push('allReviews', { nurseryId: n.id })}>
           <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
             <Text style={{ fontFamily: F.displayBold, fontWeight: '800', fontSize: 34, color: C.ink }}>{n.rating}</Text>
             <View>
