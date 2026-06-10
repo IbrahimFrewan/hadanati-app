@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CommonActions } from '@react-navigation/native';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
@@ -31,6 +31,7 @@ function Row({ icon, label, value, onPress, danger, right, last, isRTL }: { icon
 
 export function ProfileScreen({ navigation }: any) {
   const { store, lang, actions } = useApp();
+  const insets = useSafeAreaInsets();
   const isRTL = lang === 'ar';
   const [prefs, setPrefs] = useState({ reports: true, attendance: true, payments: true, marketing: false });
   const [showDelete, setShowDelete] = useState(false);
@@ -44,7 +45,7 @@ export function ProfileScreen({ navigation }: any) {
   const tog = (k: keyof typeof prefs) => setPrefs(p => ({ ...p, [k]: !p[k] }));
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: C.page }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 96 }}>
         <Text style={{ fontFamily: F.displayBold, fontSize: 26, fontWeight: '700', color: C.ink, paddingTop: 6, paddingBottom: 18, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'profile')}</Text>
 
@@ -101,11 +102,19 @@ export function ProfileScreen({ navigation }: any) {
         </View>
       </ScrollView>
 
-      {/* Delete account sheet */}
-      <Modal visible={showDelete} transparent animationType="slide" onRequestClose={() => setShowDelete(false)}>
-        <TouchableOpacity style={{ flex: 1, backgroundColor: '#1c281e66' }} onPress={() => setShowDelete(false)} activeOpacity={1}>
+      {/* Delete account sheet — absolute overlay, no Modal to avoid RN 0.85 crash */}
+      {showDelete && (
+        <TouchableOpacity
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#1c281e66', zIndex: 10 }}
+          onPress={() => setShowDelete(false)}
+          activeOpacity={1}
+        >
           <View style={{ flex: 1 }} />
-          <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, paddingTop: 14 }}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, paddingTop: 14, paddingBottom: Math.max(insets.bottom, 20) }}
+            onPress={e => e.stopPropagation()}
+          >
             <View style={{ width: 40, height: 4, borderRadius: 999, backgroundColor: '#e7e2d6', alignSelf: 'center', marginBottom: 14 }} />
             <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 12 }}>{t(lang, 'deleteAccountTitle')}</Text>
             <Text style={{ fontSize: 13.5, color: C.mut, lineHeight: 22, marginBottom: 14 }}>{t(lang, 'deleteAccountBody')}</Text>
@@ -119,7 +128,7 @@ export function ProfileScreen({ navigation }: any) {
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
+      )}
     </SafeAreaView>
   );
 }

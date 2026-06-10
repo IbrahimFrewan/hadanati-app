@@ -53,7 +53,7 @@ export function OtpScreen({ navigation, route }: any) {
           {code.map((d, i) => (
             <TextInput
               key={i}
-              ref={el => refs.current[i] = el}
+              ref={el => { refs.current[i] = el; }}
               value={d}
               onChangeText={v => setDigit(i, v)}
               onKeyPress={({ nativeEvent }) => onKey(i, nativeEvent.key)}
