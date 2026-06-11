@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { Animated, Text, View, Platform, ToastAndroid } from 'react-native';
 import { AppStore, seedStore, Booking, Child } from '../data';
+import { loadStore, saveStore, loadLang, saveLang, clearStore } from '../data/storage';
 import { Lang } from '../i18n';
 
 type Actions = {
@@ -15,6 +16,7 @@ type Actions = {
   setLang: (lang: Lang) => void;
   updateUser: (u: Partial<AppStore['user']>) => void;
   showToast: (msg: string) => void;
+  clearData: () => void;
 };
 
 type AppCtx = {
@@ -67,7 +69,31 @@ function ToastOverlay({ toastRef }: { toastRef: React.MutableRefObject<((m: stri
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [store, setStore] = useState<AppStore>(seedStore);
   const [lang, setLangState] = useState<Lang>('en');
+  const [hydrated, setHydrated] = useState(false);
   const toastRef = useRef<((m: string) => void) | null>(null);
+
+  // Load saved data from the device on first mount.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const [saved, savedLang] = await Promise.all([loadStore(), loadLang()]);
+      if (!active) return;
+      if (saved) setStore(s => ({ ...s, ...saved }));
+      if (savedLang) setLangState(savedLang);
+      setHydrated(true);
+    })();
+    return () => { active = false; };
+  }, []);
+
+  // Persist changes — but only after hydration, so we never overwrite saved
+  // data with the initial seed before it has loaded.
+  useEffect(() => {
+    if (hydrated) saveStore(store);
+  }, [store, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) saveLang(lang);
+  }, [lang, hydrated]);
 
   const actions: Actions = {
     patch: (p) => setStore(s => ({ ...s, ...p })),
@@ -87,6 +113,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLang: (l) => setLangState(l),
     updateUser: (u) => setStore(s => ({ ...s, user: { ...s.user, ...u } })),
     showToast: (msg) => toastRef.current?.(msg),
+    clearData: () => { clearStore(); setStore(seedStore()); setLangState('en'); },
   };
 
   return (

@@ -96,7 +96,14 @@ export function ProfileScreen({ navigation }: any) {
       t(lang, 'deleteAccountBody'),
       [
         { text: t(lang, 'keepAccount'), style: 'cancel' },
-        { text: t(lang, 'delete'), style: 'destructive', onPress: () => {} },
+        {
+          text: t(lang, 'delete'),
+          style: 'destructive',
+          onPress: () => {
+            actions.clearData();
+            handleLogout();
+          },
+        },
       ],
     );
   };

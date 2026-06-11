@@ -33,10 +33,20 @@ import { ReviewScreen } from '../screens/Review';
 import { AllReviewsScreen } from '../screens/AllReviews';
 import { ProfileScreen } from '../screens/Profile';
 import { SupportScreen } from '../screens/Support';
+import { withBoundary } from '../components/ErrorBoundary';
 import { t } from '../i18n';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Stable, boundary-wrapped tab screens (defined once at module scope so the
+// references never change across re-renders — a screen throwing now shows a
+// retry fallback instead of crashing the whole app).
+const SafeHome = withBoundary(HomeScreen, 'home');
+const SafeBookings = withBoundary(BookingsScreen, 'bookings');
+const SafeMessages = withBoundary(MessagesScreen, 'messages');
+const SafeNotifications = withBoundary(NotificationsScreen, 'notifications');
+const SafeProfile = withBoundary(ProfileScreen, 'profile');
 
 function TabNavigator() {
   const { store, lang } = useApp();
@@ -51,11 +61,11 @@ function TabNavigator() {
       }}}
       tabBar={(props) => <CustomTabBar {...props} unread={unread} msgs={msgs} lang={lang} />}
     >
-      <Tab.Screen name="home" component={HomeScreen} />
-      <Tab.Screen name="bookings" component={BookingsScreen} />
-      <Tab.Screen name="messages" component={MessagesScreen} />
-      <Tab.Screen name="notifications" component={NotificationsScreen} />
-      <Tab.Screen name="profile" component={ProfileScreen} />
+      <Tab.Screen name="home" component={SafeHome} />
+      <Tab.Screen name="bookings" component={SafeBookings} />
+      <Tab.Screen name="messages" component={SafeMessages} />
+      <Tab.Screen name="notifications" component={SafeNotifications} />
+      <Tab.Screen name="profile" component={SafeProfile} />
     </Tab.Navigator>
   );
 }
