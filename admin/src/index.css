@@ -1,0 +1,105 @@
+:root {
+  --ink: #243528; --mut: #7c8579; --green: #3f8a5a; --dgreen: #2c5a3d;
+  --header: #2f5e41; --cream: #f4f0e6; --line: #e9e3d4; --page: #f7f6f1;
+  --amber: #e7a93a; --danger: #d9694e; --tint: #dfeae0; --white: #fff;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink); background: var(--page); font-size: 14px;
+}
+h1 { font-size: 22px; margin: 0 0 2px; }
+h2 { font-size: 18px; margin: 0 0 10px; }
+h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .5px; color: var(--mut); }
+.muted { color: var(--mut); }
+.pad { padding: 24px; }
+.centered { display: grid; place-items: center; height: 100%; color: var(--mut); }
+
+/* Layout */
+.app { display: grid; grid-template-columns: 232px 1fr; height: 100vh; }
+.sidebar {
+  background: var(--header); color: #fff; display: flex; flex-direction: column;
+  padding: 18px 14px; gap: 6px;
+}
+.logo { font-size: 18px; font-weight: 700; padding: 6px 8px 16px; }
+.logo span { margin-left: 4px; }
+.sidebar nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+  color: #e9efe9; text-decoration: none; font-weight: 600; font-size: 13.5px;
+}
+.nav-item:hover { background: #ffffff14; }
+.nav-item.active { background: #ffffff22; color: #fff; }
+.nav-item .ico { width: 18px; text-align: center; }
+.sidebar-foot { border-top: 1px solid #ffffff22; padding-top: 12px; }
+.who { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.content { overflow: auto; padding: 26px 30px; }
+
+/* Header */
+.page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+.page-header .actions { display: flex; gap: 10px; }
+
+/* Cards */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.stat-card { background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.stat-card.warn { border-color: var(--amber); background: #fdf6e8; }
+.stat-value { font-size: 26px; font-weight: 800; color: var(--dgreen); }
+.stat-label { font-size: 12.5px; color: var(--mut); margin-top: 4px; }
+
+/* Tables */
+table.data { width: 100%; border-collapse: collapse; background: var(--white); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+table.data th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--mut); padding: 11px 14px; background: #faf9f4; border-bottom: 1px solid var(--line); }
+table.data td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+table.data tr:last-child td { border-bottom: 0; }
+.row-click { cursor: pointer; }
+.row-click:hover { background: #faf9f4; }
+.row-active { background: var(--tint); }
+.section { margin: 26px 0 10px; }
+.meta { font-family: ui-monospace, monospace; font-size: 12px; color: var(--mut); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+code { font-family: ui-monospace, monospace; background: #f0efe8; padding: 1px 6px; border-radius: 6px; font-size: 12.5px; }
+
+/* Split + panel (verification) */
+.split { display: grid; grid-template-columns: 1fr 380px; gap: 18px; align-items: start; }
+.panel { background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 18px; position: sticky; top: 0; }
+.kv { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.kv span { color: var(--mut); }
+.docs { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 16px; }
+.doc-chip { border: 1px solid var(--line); background: var(--cream); border-radius: 9px; padding: 7px 11px; cursor: pointer; font-size: 13px; }
+.doc-chip:hover { border-color: var(--green); }
+.row-btns { display: flex; gap: 10px; margin-top: 14px; }
+
+/* Forms / buttons */
+label { display: block; font-size: 12.5px; font-weight: 600; color: var(--mut); margin: 12px 0 5px; }
+input, select, textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 14px; font-family: inherit; background: #fff; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); }
+.search { width: 240px; }
+.btn { border: 1px solid transparent; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.btn.sm { padding: 6px 12px; font-size: 12.5px; }
+.btn.primary { background: var(--header); color: #fff; }
+.btn.primary:hover { background: var(--dgreen); }
+.btn.danger { background: #fff; color: var(--danger); border-color: var(--danger); }
+.btn.danger:hover { background: #fbe9e4; }
+.btn.ghost { background: #fff; border-color: var(--line); color: var(--ink); }
+.btn.ghost:hover { background: #faf9f4; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Badges */
+.badge { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: capitalize; }
+.badge-green { background: #e2f0e6; color: #2c6b43; }
+.badge-amber { background: #fbeccb; color: #9a7016; }
+.badge-red { background: #fbe2dc; color: #b14430; }
+.badge-grey { background: #ececec; color: #6a6a6a; }
+
+/* Misc */
+.error { color: var(--danger); font-size: 13px; margin: 8px 0; }
+.error.block { padding: 16px; background: #fbe9e4; border-radius: 10px; }
+.notice { background: var(--tint); border: 1px solid var(--green); color: var(--dgreen); padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; font-size: 13.5px; }
+.empty { text-align: center; color: var(--mut); padding: 60px 20px; background: var(--white); border: 1px dashed var(--line); border-radius: 14px; }
+
+/* Login */
+.login-wrap { display: grid; place-items: center; height: 100vh; background: var(--header); }
+.login-card { background: #fff; border-radius: 20px; padding: 34px; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+.login-card h1 { font-size: 22px; margin-bottom: 2px; }
+.brand-mark { font-size: 34px; }
+.login-card .btn { width: 100%; margin-top: 18px; }
