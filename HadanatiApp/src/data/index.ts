@@ -46,6 +46,21 @@ export const NURSERIES: Nursery[] = [
 
 export const getNursery = (id: string) => NURSERIES.find(n => n.id === id);
 
+/** Fallback cover for server nurseries that haven't uploaded media yet. */
+export const DEFAULT_NURSERY_IMG = U('1587654780291-39c9404d746b');
+
+/**
+ * Replace the marketplace list IN PLACE (live-binding pattern, same as the
+ * theme's F fonts): every screen reads the NURSERIES array / getNursery() at
+ * render time, so when the backend is configured we swap the seed for the real
+ * approved+listed nurseries without touching any screen. The store update that
+ * follows hydration triggers the re-render.
+ */
+export function setNurseries(list: Nursery[]) {
+  if (!list.length) return; // never blank the marketplace
+  NURSERIES.splice(0, NURSERIES.length, ...list);
+}
+
 export type Child = { id: string; name: string; dob: string; ageGroup: string; allergies: string; photoUri: string };
 export type Booking = { id: string; nurseryId: string; childId: string; childIds?: string[]; type: string; status: string; dates: string; price: number; unit: string };
 export type Notification = { id: string; kind: string; title: string; body: string; time: string; read: boolean; target: string | null };

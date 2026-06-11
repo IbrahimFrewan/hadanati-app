@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Animated, StatusBar as RNStatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Animated, TextInput, StatusBar as RNStatusBar } from 'react-native';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,6 +25,8 @@ export function Attendance() {
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<'all' | 'in' | 'out' | 'absent'>('all');
   const [qr, setQr] = useState(false);
+  const [passCode, setPassCode] = useState('');
+  const [passErr, setPassErr] = useState('');
   const [scanned, setScanned] = useState<{ name: string; parent: string } | null>(null);
   const scanAnim = useRef(new Animated.Value(0)).current;
 
@@ -151,9 +154,42 @@ export function Attendance() {
               }} />
               <Text style={{ position: 'absolute', bottom: 16, left: 0, right: 0, textAlign: 'center', color: '#cfe0cf', fontSize: 12 }}>{t(lang, 'aligning')}</Text>
             </View>
+            {/* Pickup-code entry: the parent reads their one-time code from
+                their app; we verify it server-side (qr-pass). */}
+            {isSupabaseConfigured && (
+              <>
+                <TextInput
+                  value={passCode}
+                  onChangeText={(v) => { setPassCode(v.toUpperCase()); setPassErr(''); }}
+                  placeholder="ABC123"
+                  autoCapitalize="characters"
+                  maxLength={6}
+                  style={{
+                    borderWidth: 1.5, borderColor: passErr ? C.danger : C.line, borderRadius: 12,
+                    paddingVertical: 12, paddingHorizontal: 14, fontSize: 18, letterSpacing: 4,
+                    textAlign: 'center', fontFamily: F.displayBold, color: C.ink, marginBottom: 8,
+                  }}
+                />
+                {passErr ? <Text style={{ fontFamily: F.body, fontSize: 12, color: C.danger, textAlign: 'center', marginBottom: 8 }}>{passErr}</Text> : null}
+              </>
+            )}
             <View style={{ flexDirection: 'row', gap: 11 }}>
               <Button variant="secondary" onPress={() => setQr(false)} style={{ flex: 1 }}>{t(lang, 'cancel')}</Button>
-              <Button onPress={() => setScanned({ name: 'Yara H.', parent: 'Layla H.' })} style={{ flex: 1 }} icon="check">{t(lang, 'simulateScan')}</Button>
+              <Button
+                onPress={async () => {
+                  if (!isSupabaseConfigured) { setScanned({ name: 'Yara H.', parent: 'Layla H.' }); return; }
+                  try {
+                    const res = await actions.verifyPickup(passCode.trim());
+                    setScanned({ name: res.child, parent: res.parent });
+                    setPassCode('');
+                  } catch (e: any) {
+                    setPassErr(e?.message ?? 'Invalid code');
+                  }
+                }}
+                style={{ flex: 1 }} icon="check"
+              >
+                {isSupabaseConfigured ? t(lang, 'done') : t(lang, 'simulateScan')}
+              </Button>
             </View>
           </View>
         ) : (

@@ -1,10 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
-// Parent confirms a booking request. Server is authoritative on capacity and
-// price. Creates the booking_request (status=pending) and a payment row
-// (status=authorized — funds held in escrow until the nursery accepts).
-//
-// NOTE: real gateway authorization is integrated where marked; here we record
-// the intent so the lifecycle is complete and testable end-to-end.
+// Parent submits a booking request. The SERVER is authoritative on price:
+//   per-child amount = unit price (from nurseries) × qty (duration units).
+// Supports multiple children: one request + one escrow payment per child, so
+// the nursery can accept/decline each child independently against capacity.
 import { corsHeaders, json } from "../_shared/cors.ts";
 import { adminClient, audit, getCaller } from "../_shared/auth.ts";
 import { notifyUser } from "../_shared/notify.ts";
@@ -18,19 +16,28 @@ Deno.serve(async (req) => {
   if (!caller) return json({ error: "unauthorized" }, 401);
 
   const body = await req.json().catch(() => ({}));
-  const { nurseryId, childId, type, ageGroup, schedule, fromDate, method } = body;
-  if (!nurseryId || !childId || !type) {
-    return json({ error: "nurseryId, childId, type required" }, 400);
+  const { nurseryId, type, ageGroup, schedule, fromDate, method } = body;
+  // Accept childIds[] (multi-child) with childId as a back-compat fallback.
+  const childIds: string[] = Array.isArray(body.childIds) && body.childIds.length
+    ? body.childIds : (body.childId ? [body.childId] : []);
+  // qty = duration units (hours for hourly, days for daily, 1 for weekly/monthly).
+  const qty = Math.max(1, Math.min(200, Number(body.qty) || 1));
+
+  if (!nurseryId || !childIds.length || !type) {
+    return json({ error: "nurseryId, childIds, type required" }, 400);
   }
 
   const db = adminClient();
 
-  // The child must belong to the caller.
-  const { data: child } = await db.from("children")
-    .select("id, parent_id").eq("id", childId).single();
-  if (!child || child.parent_id !== caller.id) return json({ error: "forbidden" }, 403);
+  // Every child must belong to the caller.
+  const { data: children } = await db.from("children")
+    .select("id, parent_id").in("id", childIds);
+  if (!children || children.length !== childIds.length ||
+      children.some((c: any) => c.parent_id !== caller.id)) {
+    return json({ error: "forbidden" }, 403);
+  }
 
-  // Nursery must be approved & listed, and price is read from the server.
+  // Nursery must be approved & listed; price comes from the server.
   const { data: nursery } = await db.from("nurseries")
     .select("id, owner_id, status, listed, price_hourly, price_daily, price_weekly, price_monthly")
     .eq("id", nurseryId).single();
@@ -46,39 +53,49 @@ Deno.serve(async (req) => {
   const chosen = priceMap[type];
   if (!chosen || chosen.price == null) return json({ error: "price unavailable" }, 400);
 
-  // Authoritative capacity check for the requested age group (if provided).
+  // Soft capacity check (authoritative one happens again at accept time).
   if (ageGroup) {
     const { data: grp } = await db.from("capacity_groups")
       .select("total, filled").eq("nursery_id", nurseryId).eq("group_", ageGroup).maybeSingle();
     if (grp && grp.filled >= grp.total) return json({ error: "no capacity" }, 409);
   }
 
+  // Authoritative per-child amount: unit price × duration units.
+  const perChild = Math.round(Number(chosen.price) * qty * 100) / 100;
   const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
-  const { data: request, error: reqErr } = await db.from("booking_requests").insert({
-    parent_id: caller.id, nursery_id: nurseryId, child_id: childId,
-    type, schedule: schedule ?? null, from_date: fromDate ?? null,
-    price: chosen.price, unit: chosen.unit, status: "pending", expires_at: expiresAt,
-  }).select("id").single();
-  if (reqErr) return json({ error: reqErr.message }, 400);
+  const requestIds: string[] = [];
 
-  // Authorize payment (escrow). Replace this block with the gateway call.
-  const amount = Number(chosen.price);
-  const serviceFee = Math.round(amount * FEE_RATE * 100) / 100;
-  await db.from("payments").insert({
-    request_id: request.id, parent_id: caller.id, nursery_id: nurseryId,
-    amount, currency: "JOD", method: method ?? "card",
-    status: "authorized", service_fee: serviceFee, net_amount: amount - serviceFee,
-  });
+  for (const childId of childIds) {
+    const { data: request, error: reqErr } = await db.from("booking_requests").insert({
+      parent_id: caller.id, nursery_id: nurseryId, child_id: childId,
+      type, schedule: schedule ?? null, from_date: fromDate ?? null,
+      price: perChild, unit: chosen.unit, status: "pending", expires_at: expiresAt,
+    }).select("id").single();
+    if (reqErr) return json({ error: reqErr.message, created: requestIds }, 400);
 
-  // Notify the nursery owner of the incoming request.
+    const serviceFee = Math.round(perChild * FEE_RATE * 100) / 100;
+    await db.from("payments").insert({
+      request_id: request.id, parent_id: caller.id, nursery_id: nurseryId,
+      amount: perChild, currency: "JOD", method: method ?? "card",
+      status: "authorized", service_fee: serviceFee, net_amount: perChild - serviceFee,
+    });
+    requestIds.push(request.id);
+  }
+
   if (nursery.owner_id) {
     await notifyUser(nursery.owner_id, {
       kind: "booking", title: "New booking request",
-      body: "A parent requested a booking — review it before it expires.",
+      body: childIds.length > 1
+        ? `A parent requested a booking for ${childIds.length} children — review before it expires.`
+        : "A parent requested a booking — review it before it expires.",
       target: "nRequests",
     });
   }
 
-  await audit(caller.id, "create_request", "booking_requests", request.id, { nurseryId, type });
-  return json({ ok: true, requestId: request.id, price: amount, unit: chosen.unit });
+  await audit(caller.id, "create_request", "booking_requests", requestIds[0] ?? null,
+    { nurseryId, type, qty, children: childIds.length, perChild });
+  return json({
+    ok: true, requestIds, perChild, qty,
+    total: Math.round(perChild * childIds.length * 100) / 100, unit: chosen.unit,
+  });
 });

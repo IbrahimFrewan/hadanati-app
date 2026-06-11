@@ -22,6 +22,8 @@ interface NurseryContextType {
     setListed: (b: boolean) => void;
     uploadKyc: (type: api.KycDocType, file: { base64: string; mimeType?: string }) => Promise<void>;
     submitKyc: () => Promise<void>;
+    sendDailyReport: (bookingId: string, r: Parameters<typeof api.sendDailyReport>[2]) => Promise<void>;
+    verifyPickup: (code: string) => Promise<{ result: 'checked_in' | 'checked_out'; child: string; parent: string }>;
     auth: {
       signIn: (email: string, password: string) => Promise<void>;
       signUp: (email: string, password: string, fullName: string) => Promise<{ hasSession: boolean }>;
@@ -127,7 +129,19 @@ export function NurseryProvider({ children }: { children: React.ReactNode }) {
   };
 
   const actions: NurseryContextType['actions'] = {
-    patch: (p) => setStore((s) => ({ ...s, ...p })),
+    // patch also persists profile/capacity edits to the server, so existing
+    // screens (NProfile, NCapacity) need no changes.
+    patch: (p) => {
+      setStore((s) => ({ ...s, ...p }));
+      if (remote && nid()) {
+        if (p.nursery) {
+          api.updateNurseryInfo(nid()!, {
+            name: p.nursery.name, district: p.nursery.district, phone: p.nursery.phone,
+          }).catch(w);
+        }
+        if (p.capacity) api.updateCapacity(nid()!, p.capacity).catch(w);
+      }
+    },
     setReg: (p) => setStore((s) => ({ ...s, registration: { ...s.registration, ...p } })),
     setApproval: (st) => setStore((s) => ({ ...s, approvalStatus: st })),
     respondRequest: (id, status) => {
@@ -172,6 +186,20 @@ export function NurseryProvider({ children }: { children: React.ReactNode }) {
       const id = await ensureNurseryId();
       if (!id) throw new Error('No nursery found for this account.');
       await api.uploadKycDocument(id, type, file);
+    },
+    sendDailyReport: async (bookingId, r) => {
+      // Locally mark progress; persist to the server when configured.
+      if (remote) {
+        const id = nid() ?? await ensureNurseryId();
+        if (id) await api.sendDailyReport(id, bookingId, r);
+      }
+    },
+    verifyPickup: async (code) => {
+      if (!remote) return { result: 'checked_in', child: 'Yara H.', parent: 'Layla H.' }; // mock
+      const res = await api.verifyPickup(code);
+      const o = oid();
+      if (o) hydrateFromServer(o); // refresh the roster
+      return res;
     },
     submitKyc: async () => {
       if (!remote) return;

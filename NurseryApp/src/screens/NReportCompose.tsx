@@ -14,7 +14,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export function NReportCompose() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<RouteProp<RootStackParamList, 'NReportCompose'>>();
-  const { lang, store } = useN();
+  const { lang, store, actions } = useN();
   const child = store.roster.find((k) => k.id === route.params.childId) || store.roster[0];
 
   const [mood, setMood] = useState('happy');
@@ -44,9 +44,20 @@ export function NReportCompose() {
     </View>
   );
 
-  const send = () => {
+  const send = async () => {
     setSending(true);
-    setTimeout(() => navigation.replace('NReports'), 900);
+    try {
+      // Persists to the server (status 'sent', parent gains read access) when
+      // a backend is configured; no-op otherwise.
+      await actions.sendDailyReport(child.id, {
+        mood, meals, napStart, napEnd,
+        activities: activities.join(', '), note,
+      });
+      navigation.replace('NReports');
+    } catch (e) {
+      console.warn('[report]', e);
+      setSending(false);
+    }
   };
 
   return (

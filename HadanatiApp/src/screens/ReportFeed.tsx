@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
@@ -6,6 +6,8 @@ import { Icon } from '../components/Icon';
 import { TopBar, NurseryImage, EmptyView } from '../components';
 import { useApp } from '../context/AppContext';
 import { getNursery } from '../data';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { fetchDailyReports, ParentReport } from '../data/api';
 import { t } from '../i18n';
 
 const MOODS: Record<string, { label: string; labelAr: string; c: string; bg: string }> = {
@@ -24,7 +26,16 @@ export function ReportFeedScreen({ navigation, route }: any) {
   const { store, lang } = useApp();
   const isRTL = lang === 'ar';
   const [childId, setChildId] = useState<string>(route.params?.childId || store.children[0]?.id || 'c1');
-  const reports = MOCK_REPORTS.filter(r => r.childId === childId);
+  // Backend configured → real reports from the server (RLS limits them to this
+  // parent's bookings). Otherwise keep the seed feed.
+  const [serverReports, setServerReports] = useState<ParentReport[] | null>(null);
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchDailyReports('').then(setServerReports).catch(() => {});
+  }, []);
+
+  const all = serverReports ?? MOCK_REPORTS;
+  const reports = all.filter(r => r.childId === childId);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>

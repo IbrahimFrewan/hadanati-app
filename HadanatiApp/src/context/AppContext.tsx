@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { Animated, Text, View, Platform, ToastAndroid } from 'react-native';
-import { AppStore, seedStore, Booking, Child } from '../data';
+import { AppStore, seedStore, Booking, Child, setNurseries } from '../data';
 import { loadStore, saveStore, loadLang, saveLang, clearStore } from '../data/storage';
 import { setLangFonts } from '../theme';
 import { Lang } from '../i18n';
@@ -20,6 +20,9 @@ type Actions = {
   updateUser: (u: Partial<AppStore['user']>) => void;
   showToast: (msg: string) => void;
   clearData: () => void;
+  cancelBooking: (bookingId: string) => void;
+  submitReview: (nurseryId: string, rating: number, comment: string) => Promise<void>;
+  issuePickupCode: (bookingId: string) => Promise<string>;
   auth: {
     sendOtp: (phone: string, shouldCreate?: boolean) => Promise<void>;
     verifyOtp: (phone: string, token: string) => Promise<void>;
@@ -87,6 +90,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const hydrateFromServer = useCallback(async (uid: string) => {
     try {
+      // Marketplace supply: swap the seed list for the real approved+listed
+      // nurseries (live-binding; the setStore below repaints every screen).
+      api.fetchPublicNurseries().then(setNurseries).catch(w);
       const partial = await api.hydrateStore(uid);
       setStore(s => {
         // Server arrays are authoritative. For the user profile, keep any
@@ -199,9 +205,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const nb: Booking = { id, nurseryId: dr.nurseryId, childId: dr.childId, childIds, type: dr.type, status: 'confirmed', dates: dr.dates || 'Upcoming', price: dr.price, unit: dr.unit };
         return { ...s, bookings: [nb, ...s.bookings], draft: { ...s.draft, bookingId: id } };
       });
-      if (remote && uid() && d?.nurseryId && d?.childId) {
+      if (remote && uid() && d?.nurseryId && (d?.childIds?.length || d?.childId)) {
         api.createBookingRequest({
-          nurseryId: d.nurseryId, childId: d.childId, type: d.type,
+          nurseryId: d.nurseryId,
+          childIds: d.childIds?.length ? d.childIds : [d.childId],
+          type: d.type, qty: d.qty,
           ageGroup: d.ageGroup, schedule: d.dates, fromDate: d.fromDate, method: d.method,
         }).then(() => { const u = uid(); if (u) hydrateFromServer(u); }).catch(w);
       }
@@ -220,6 +228,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (remote && uid()) api.upsertProfile(uid()!, u).catch(w);
     },
     showToast: (msg) => toastRef.current?.(msg),
+    cancelBooking: (bookingId) => {
+      setStore(s => ({ ...s, bookings: s.bookings.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b) }));
+      if (remote && uid()) api.cancelBooking(bookingId).catch(w);
+    },
+    submitReview: async (nurseryId, rating, comment) => {
+      if (remote && uid()) await api.submitReview(uid()!, nurseryId, rating, comment);
+    },
+    issuePickupCode: async (bookingId) => {
+      if (!remote) return 'DEMO42'; // mock mode
+      return api.issuePickupCode(bookingId);
+    },
     clearData: () => {
       clearStore(); setStore(seedStore()); setLangState('en');
       if (remote) api.auth.signOut().catch(w);

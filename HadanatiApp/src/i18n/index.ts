@@ -21,6 +21,9 @@ export const strings: Record<Lang, Record<string, string>> = {
     newHere: 'New here?',
     phoneError: 'Enter a valid Jordanian mobile number starting with 7.',
     phoneNotRegistered: 'This number is not registered. Please create an account first.',
+    pickupCode: 'Pickup code',
+    pickupCodeTitle: 'Pickup / drop-off code',
+    pickupCodeBody: 'Show this one-time code to the nursery at drop-off or pickup. Valid today only.',
     // Register
     createAccount: 'Create your account',
     whatsYourNumber: 'What\'s your number?',
@@ -335,6 +338,9 @@ export const strings: Record<Lang, Record<string, string>> = {
     newHere: 'لأول مرة؟',
     phoneError: 'أدخلي رقم جوال أردني صحيح يبدأ بـ 7.',
     phoneNotRegistered: 'هذا الرقم غير مسجّل. الرجاء إنشاء حساب أولاً.',
+    pickupCode: 'رمز الاستلام',
+    pickupCodeTitle: 'رمز التسليم / الاستلام',
+    pickupCodeBody: 'أظهر هذا الرمز لمرة واحدة للحضانة عند التسليم أو الاستلام. صالح اليوم فقط.',
     // Register
     createAccount: 'إنشاء حسابك',
     whatsYourNumber: 'ما رقم هاتفك؟',

@@ -9,10 +9,21 @@ import { useApp } from '../context/AppContext';
 import { t } from '../i18n';
 
 export function ReviewScreen({ navigation, route }: any) {
-  const { lang } = useApp();
+  const { lang, actions } = useApp();
   const isRTL = lang === 'ar';
   const nurseryId = route.params?.nurseryId;
   const n = getNursery(nurseryId);
+  const [err, setErr] = useState('');
+
+  const submit = async () => {
+    setErr('');
+    try {
+      await actions.submitReview(nurseryId, stars, text);
+      setDone(true);
+    } catch (e: any) {
+      setErr(e?.message ?? 'Could not submit the review.');
+    }
+  };
 
   const [stars, setStars] = useState(0);
   const [text, setText] = useState('');
@@ -80,7 +91,8 @@ export function ReviewScreen({ navigation, route }: any) {
       </ScrollView>
 
       <View style={{ padding: 16, paddingBottom: 26, borderTopWidth: 1, borderTopColor: C.line }}>
-        <Button full size="lg" disabled={!stars} onPress={() => setDone(true)}>{t(lang, 'submitReview')}</Button>
+        {err ? <Text style={{ fontSize: 13, color: C.danger, marginBottom: 10, textAlign: 'center', fontFamily: F.body }}>{err}</Text> : null}
+        <Button full size="lg" disabled={!stars} onPress={submit}>{t(lang, 'submitReview')}</Button>
       </View>
     </SafeAreaView>
   );

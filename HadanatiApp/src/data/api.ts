@@ -2,7 +2,7 @@
 // (see ./index.ts). Every screen keeps consuming the same AppStore shape; only
 // this module talks to the backend. All calls assume `isSupabaseConfigured`.
 import { supabase } from '../lib/supabase';
-import { AppStore, Booking, Child, Notification, Thread } from './index';
+import { AppStore, Booking, Child, Notification, Thread, Nursery, DEFAULT_NURSERY_IMG } from './index';
 
 const E164 = (digits: string) => `+962${digits.replace(/\D/g, '')}`;
 
@@ -119,14 +119,95 @@ export async function fetchBookings(userId: string): Promise<Booking[]> {
   return (data ?? []).map(mapBooking);
 }
 
-/** Create a booking request (escrow authorize) via the trusted Edge Function. */
+/** Create booking request(s) (escrow authorize) via the trusted Edge Function.
+ *  Server computes the authoritative price: unit × qty, one request per child. */
 export async function createBookingRequest(input: {
-  nurseryId: string; childId: string; type: string; ageGroup?: string;
-  schedule?: string; fromDate?: string; method?: string;
+  nurseryId: string; childIds: string[]; type: string; qty?: number;
+  ageGroup?: string; schedule?: string; fromDate?: string; method?: string;
 }) {
   const { data, error } = await supabase.functions.invoke('confirm-booking', { body: input });
   if (error) throw error;
-  return data as { ok: boolean; requestId: string; price: number; unit: string };
+  return data as { ok: boolean; requestIds: string[]; perChild: number; total: number; unit: string };
+}
+
+/** Cancel a confirmed/active booking (refund handled server-side). */
+export async function cancelBooking(bookingId: string) {
+  const { data, error } = await supabase.functions.invoke('cancel-booking', { body: { bookingId } });
+  if (error) throw error;
+  return data as { ok: boolean };
+}
+
+/** Get today's one-time pickup/drop-off code for a booking. */
+export async function issuePickupCode(bookingId: string): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('qr-pass', {
+    body: { action: 'issue', bookingId },
+  });
+  if (error) throw error;
+  return (data as any).code as string;
+}
+
+// ---- marketplace (approved + listed nurseries) -------------------------------
+export async function fetchPublicNurseries(): Promise<Nursery[]> {
+  const { data } = await supabase.from('nurseries')
+    .select('id, name, district, lat, lng, tagline, rating, reviews_count, verified, sponsored, price_hourly, price_daily, price_weekly, price_monthly, capacity_groups(group_, total, filled), nursery_media(file_path, is_cover, kind)')
+    .eq('status', 'approved').eq('listed', true)
+    .order('sponsored', { ascending: false }).order('rating', { ascending: false });
+
+  return (data ?? []).map((n: any): Nursery => {
+    const caps: any[] = n.capacity_groups ?? [];
+    const free = caps.reduce((a, c) => a + Math.max(0, c.total - c.filled), 0);
+    const total = caps.reduce((a, c) => a + c.total, 0);
+    const cover = (n.nursery_media ?? []).find((m: any) => m.is_cover && m.kind === 'photo')
+      ?? (n.nursery_media ?? []).find((m: any) => m.kind === 'photo');
+    const img = cover
+      ? supabase.storage.from('nursery-media').getPublicUrl(cover.file_path).data.publicUrl
+      : DEFAULT_NURSERY_IMG;
+    const priceFrom = n.price_monthly ?? n.price_weekly ?? n.price_daily ?? n.price_hourly ?? 0;
+    const unit = n.price_monthly != null ? 'mo' : n.price_weekly != null ? 'wk' : n.price_daily != null ? 'day' : 'hr';
+    return {
+      id: n.id, name: n.name, district: n.district ?? '',
+      rating: Number(n.rating) || 0, reviews: n.reviews_count ?? 0,
+      priceFrom: Number(priceFrom), unit,
+      ages: [...new Set(caps.map((c) => c.group_))] as string[],
+      avail: total === 0 ? 'available' : free === 0 ? 'full' : free <= 2 ? 'limited' : 'available',
+      verified: !!n.verified, sponsored: !!n.sponsored,
+      tag: n.tagline ?? '', img, lat: n.lat ?? 31.95, lng: n.lng ?? 35.91,
+    };
+  });
+}
+
+// ---- daily reports (parent view) ----------------------------------------------
+export type ParentReport = {
+  id: string; childId: string; nurseryId: string; date: string;
+  mood: string; sleep: string; mealsCount: number; media: number; unread: boolean;
+};
+
+export async function fetchDailyReports(userId: string): Promise<ParentReport[]> {
+  const { data } = await supabase.from('daily_reports')
+    .select('id, child_id, nursery_id, date, mood, meals, nap_start, nap_end, status, report_media(id)')
+    .eq('status', 'sent')
+    .order('date', { ascending: false })
+    .limit(60);
+  return (data ?? []).map((r: any) => ({
+    id: r.id, childId: r.child_id, nurseryId: r.nursery_id,
+    date: r.date, mood: r.mood ?? 'happy',
+    sleep: r.nap_start && r.nap_end ? `${r.nap_start}–${r.nap_end}` : '—',
+    mealsCount: r.meals ? Object.keys(r.meals).length : 0,
+    media: (r.report_media ?? []).length, unread: false,
+  }));
+}
+
+// ---- reviews -------------------------------------------------------------------
+/** Submit a review; requires one of the caller's bookings at that nursery. */
+export async function submitReview(userId: string, nurseryId: string, rating: number, comment: string) {
+  const { data: booking } = await supabase.from('bookings')
+    .select('id').eq('parent_id', userId).eq('nursery_id', nurseryId)
+    .limit(1).maybeSingle();
+  if (!booking) throw new Error('You can review a nursery after booking it.');
+  const { error } = await supabase.from('reviews').insert({
+    booking_id: booking.id, parent_id: userId, nursery_id: nurseryId, rating, comment,
+  });
+  if (error) throw error;
 }
 
 // ---- notifications ----------------------------------------------------------

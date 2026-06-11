@@ -208,6 +208,56 @@ export async function setListed(nurseryId: string, listed: boolean) {
   await supabase.from('nurseries').update({ listed }).eq('id', nurseryId);
 }
 
+/** Persist profile edits (name/district/phone/tagline) to the server. */
+export async function updateNurseryInfo(nurseryId: string, p: {
+  name?: string; district?: string; phone?: string; tagline?: string;
+}) {
+  const patch: Record<string, unknown> = {};
+  if (p.name !== undefined) patch.name = p.name;
+  if (p.district !== undefined) patch.district = p.district;
+  if (p.phone !== undefined) patch.phone = p.phone;
+  if (p.tagline !== undefined) patch.tagline = p.tagline;
+  if (Object.keys(patch).length) {
+    await supabase.from('nurseries').update(patch).eq('id', nurseryId);
+  }
+}
+
+/** Persist capacity totals per age group (filled is server-derived). */
+export async function updateCapacity(nurseryId: string, groups: CapacityGroup[]) {
+  for (const g of groups) {
+    await supabase.from('capacity_groups')
+      .update({ total: g.total, name: g.group })
+      .eq('nursery_id', nurseryId).eq('group_', g.age);
+  }
+}
+
+/** Send a daily report for a booking (locks it as 'sent', parent gets access). */
+export async function sendDailyReport(nurseryId: string, bookingId: string, r: {
+  mood?: string; meals?: Record<string, string>; napStart?: string; napEnd?: string;
+  diapers?: string; activities?: string; note?: string;
+}) {
+  const { data: b } = await supabase.from('bookings')
+    .select('child_id').eq('id', bookingId).single();
+  if (!b?.child_id) throw new Error(`No child found for booking ${bookingId}`);
+  const { error } = await supabase.from('daily_reports').upsert({
+    booking_id: bookingId, child_id: b.child_id, nursery_id: nurseryId,
+    date: todayISO(), mood: r.mood ?? null, meals: r.meals ?? {},
+    nap_start: r.napStart ?? null, nap_end: r.napEnd ?? null,
+    diapers: r.diapers ?? null, activities: r.activities ?? null,
+    note: r.note ?? null, status: 'sent', sent_at: new Date().toISOString(),
+  }, { onConflict: 'booking_id,date' });
+  if (error) throw error;
+}
+
+/** Verify a parent's pickup/drop-off code (qr-pass Edge Function). */
+export async function verifyPickup(code: string) {
+  const { data, error } = await supabase.functions.invoke('qr-pass', {
+    body: { action: 'verify', code },
+  });
+  if (error) throw error;
+  return data as { ok: boolean; result: 'checked_in' | 'checked_out'; child: string; parent: string };
+}
+
 export async function sendMessage(ownerId: string, threadId: string, text: string) {
   await supabase.from('messages').insert({ thread_id: threadId, sender_id: ownerId, body: text });
   await supabase.from('message_threads')

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, FlatList, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
@@ -16,7 +16,7 @@ const TABS: Record<string, string[]> = {
 const PLAN_LABEL: Record<string, string> = { hourly: 'Hourly', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' };
 
 export function BookingsScreen({ navigation }: any) {
-  const { store, setStore, lang } = useApp();
+  const { store, setStore, lang, actions } = useApp();
   const [tab, setTab] = useState('active');
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const isRTL = lang === 'ar';
@@ -30,8 +30,22 @@ export function BookingsScreen({ navigation }: any) {
   const list = store.bookings.filter(b => TABS[tab].includes(b.status));
 
   const doCancel = () => {
-    setStore(s => ({ ...s, bookings: s.bookings.map(b => b.id === cancelTarget.id ? { ...b, status: 'cancelled' } : b) }));
+    // Updates local state AND calls the cancel-booking Edge Function (refund)
+    // when the backend is configured.
+    actions.cancelBooking(cancelTarget.id);
     setCancelTarget(null);
+  };
+
+  const showPickupCode = async (bookingId: string) => {
+    try {
+      const code = await actions.issuePickupCode(bookingId);
+      Alert.alert(
+        t(lang, 'pickupCodeTitle'),
+        `${t(lang, 'pickupCodeBody')}\n\n${code}`,
+      );
+    } catch (e: any) {
+      Alert.alert('', e?.message ?? 'Could not get a pickup code.');
+    }
   };
 
   const STATUS_LABELS: Record<string, string> = {
@@ -106,6 +120,14 @@ export function BookingsScreen({ navigation }: any) {
                     <View style={{ width: 1, backgroundColor: C.line }} />
                     <TouchableOpacity onPress={() => navigation.navigate('messages')} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 }}>
                       <Icon name="chat" size={16} color={C.dgreen} /><Text style={{ fontFamily: F.bodyBold, fontSize: 12.5, fontWeight: '600', color: C.dgreen }}>{t(lang, 'message')}</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                {(b.status === 'confirmed' || b.status === 'active') && (
+                  <>
+                    <View style={{ width: 1, backgroundColor: C.line }} />
+                    <TouchableOpacity onPress={() => showPickupCode(b.id)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 }}>
+                      <Icon name="qr" size={16} color={C.dgreen} /><Text style={{ fontFamily: F.bodyBold, fontSize: 12.5, fontWeight: '600', color: C.dgreen }}>{t(lang, 'pickupCode')}</Text>
                     </TouchableOpacity>
                   </>
                 )}
