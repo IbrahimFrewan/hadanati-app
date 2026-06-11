@@ -19,6 +19,9 @@
       "package": "com.hadanati.nursery",
       "predictiveBackGestureEnabled": false
     },
+    "plugins": [
+      ["expo-image-picker", { "photosPermission": "Allow حضانتي to access your photos to upload verification documents." }]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
