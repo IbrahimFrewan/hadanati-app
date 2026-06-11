@@ -20,6 +20,7 @@ export const strings: Record<Lang, Record<string, string>> = {
     sendLoginCode: 'Send login code',
     newHere: 'New here?',
     phoneError: 'Enter a valid Jordanian mobile number starting with 7.',
+    phoneNotRegistered: 'This number is not registered. Please create an account first.',
     // Register
     createAccount: 'Create your account',
     whatsYourNumber: 'What\'s your number?',
@@ -333,6 +334,7 @@ export const strings: Record<Lang, Record<string, string>> = {
     sendLoginCode: 'إرسال رمز الدخول',
     newHere: 'لأول مرة؟',
     phoneError: 'أدخلي رقم جوال أردني صحيح يبدأ بـ 7.',
+    phoneNotRegistered: 'هذا الرقم غير مسجّل. الرجاء إنشاء حساب أولاً.',
     // Register
     createAccount: 'إنشاء حسابك',
     whatsYourNumber: 'ما رقم هاتفك؟',

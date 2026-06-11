@@ -22,10 +22,10 @@ function Row({
   danger?: boolean; right?: React.ReactNode; last?: boolean; isRTL?: boolean;
 }) {
   const Wrap: any = onPress ? TouchableOpacity : View;
+  const pressProps = onPress ? { onPress, activeOpacity: 0.7 } : {};
   return (
     <Wrap
-      onPress={onPress}
-      activeOpacity={0.7}
+      {...pressProps}
       style={{
         flexDirection: isRTL ? 'row-reverse' : 'row',
         alignItems: 'center', gap: 13,

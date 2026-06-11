@@ -8,7 +8,7 @@ import { useApp } from '../context/AppContext';
 import { t } from '../i18n';
 
 export function LoginScreen({ navigation }: any) {
-  const { lang } = useApp();
+  const { lang, store } = useApp();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
@@ -19,6 +19,10 @@ export function LoginScreen({ navigation }: any) {
 
   const submit = () => {
     if (!valid) { setErr(t(lang, 'phoneError')); return; }
+    if (!store.user.phone || store.user.phone !== digits) {
+      setErr(t(lang, 'phoneNotRegistered'));
+      return;
+    }
     setErr('');
     setLoading(true);
     setTimeout(() => { setLoading(false); navigation.push('otp', { phone: digits, mode: 'login' }); }, 700);
