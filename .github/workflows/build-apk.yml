@@ -66,19 +66,28 @@ jobs:
           # Raise Gradle JVM memory (R8/dexing) — last value in the file wins.
           echo "org.gradle.jvmargs=-Xmx5120m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
           chmod +x ./gradlew
-          if ! ./gradlew assembleRelease --no-daemon --stacktrace --max-workers=2 2>&1 | tee /tmp/gradle.log; then
-            echo "----- gradle failed; tail -----"
-            tail -n 150 /tmp/gradle.log
-            # Surface the key error lines as an annotation (readable via API).
-            msg=$(grep -nE "FAILURE:|What went wrong|Caused by:|error:|Execution failed|A problem occurred|SDK location|Could not (find|resolve|determine|create)|Failed to|not found|NDK|aapt2|OutOfMemory|compileSdk|minSdk|targetSdk" /tmp/gradle.log | tail -n 30 | sed ':a;N;$!ba;s/\n/%0A/g')
-            echo "::error title=Gradle ${{ matrix.app }}::${msg}"
+          set +e
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace --max-workers=2 2>&1 | tee /tmp/gradle.log
+          code=${PIPESTATUS[0]}
+          set -e
+          echo "gradle exit=$code"
+          # Surface a task/output summary as an annotation (logs are unreachable here).
+          summary=$(grep -iE "BUILD SUCCESSFUL|BUILD FAILED|Task :app:.*[Rr]elease|\.apk|\.aab|outputs/|variant|[Ss]igning|bundleReleaseJsAndAssets" /tmp/gradle.log | tail -40 | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=gradle summary (${{ matrix.app }})::${summary:-none}"
+          if [ "$code" != "0" ]; then
+            err=$(grep -nE "FAILURE:|What went wrong|Caused by:|error:|Execution failed|A problem occurred|SDK location|Could not |Failed to|not found|NDK|aapt2|OutOfMemory" /tmp/gradle.log | tail -30 | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Gradle fail (${{ matrix.app }})::${err}"
             exit 1
           fi
 
       - name: Locate APK
+        if: always()
         run: |
+          echo "----- outputs tree -----"
+          find ${{ matrix.app }}/android/app/build/outputs -type f 2>/dev/null || echo "(no outputs dir)"
+          tree=$(find ${{ matrix.app }}/android/app/build/outputs -type f 2>/dev/null | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=outputs (${{ matrix.app }})::${tree:-EMPTY}"
           found=$(find ${{ matrix.app }}/android -name '*.apk' 2>/dev/null)
-          echo "APKs found:"; echo "$found"
           if [ -z "$found" ]; then
             echo "::error title=No APK (${{ matrix.app }})::assembleRelease produced no .apk under android/"
           else
