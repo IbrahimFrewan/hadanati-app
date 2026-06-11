@@ -9,15 +9,36 @@ import { Button, Field } from '../components';
 import { RootStackParamList } from '../navigation';
 import { t } from '../i18n';
 import { useN } from '../context/NurseryContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function NLogin() {
   const navigation = useNavigation<Nav>();
-  const { lang, store } = useN();
-  const [phone, setPhone] = useState('');
+  const { lang, actions } = useN();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setErr('');
+    if (isSupabaseConfigured) {
+      if (!email.trim() || !password) { setErr(t(lang, 'phoneNotRegistered')); return; }
+      setLoading(true);
+      try {
+        await actions.auth.signIn(email.trim(), password);
+        navigation.replace('MainTabs');
+      } catch (e: any) {
+        setErr(e?.message ?? 'Sign-in failed');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    // Mock fallback (no backend configured): proceed to the dashboard.
+    navigation.replace('MainTabs');
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: C.cream }}>
@@ -38,12 +59,12 @@ export function NLogin() {
         <Text style={{ fontFamily: F.body, fontSize: 14, color: C.mut, marginBottom: 28 }}>{t(lang, 'loginSubtitle')}</Text>
 
         <Field
-          label={t(lang, 'phone')}
-          value={phone}
-          onChangeText={v => { setPhone(v); setErr(''); }}
-          placeholder="+962 7X XXX XXXX"
-          keyboardType="phone-pad"
-          icon="phone"
+          label={t(lang, 'ownerEmail')}
+          value={email}
+          onChangeText={v => { setEmail(v); setErr(''); }}
+          placeholder="owner@nursery.com"
+          keyboardType="email-address"
+          icon="user"
         />
         <Field
           label={t(lang, 'password')}
@@ -61,21 +82,8 @@ export function NLogin() {
         {err ? (
           <Text style={{ fontFamily: F.body, fontSize: 13, color: C.danger, marginBottom: 12, textAlign: 'center' }}>{err}</Text>
         ) : null}
-        <Button onPress={() => {
-          const digits = phone.replace(/\D/g, '');
-          const regPhone = store.registration.phone.replace(/\D/g, '');
-          if (regPhone && digits !== regPhone) {
-            setErr(t(lang, 'phoneNotRegistered'));
-            return;
-          }
-          if (!regPhone) {
-            setErr(t(lang, 'phoneNotRegistered'));
-            return;
-          }
-          setErr('');
-          navigation.replace('MainTabs');
-        }} full size="lg">
-          {t(lang, 'signIn')}
+        <Button onPress={submit} disabled={loading} full size="lg">
+          {loading ? '…' : t(lang, 'signIn')}
         </Button>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 22 }}>

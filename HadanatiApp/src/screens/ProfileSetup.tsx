@@ -12,7 +12,8 @@ export function ProfileSetupScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
 
   const save = () => {
-    actions.patch({ user: { ...store.user, email } });
+    // updateUser also persists to the backend when one is configured.
+    actions.updateUser({ email });
     navigation.replace('tabs');
   };
 

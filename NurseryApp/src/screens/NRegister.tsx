@@ -8,6 +8,8 @@ import { Button, Field, TopBar } from '../components';
 import { RootStackParamList } from '../navigation';
 import { t } from '../i18n';
 import { useN } from '../context/NurseryContext';
+import { isSupabaseConfigured } from '../lib/supabase';
+import * as api from '../data/api';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -15,9 +17,11 @@ export function NRegister() {
   const navigation = useNavigation<Nav>();
   const { lang, actions } = useN();
   const [step, setStep] = useState(0);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     businessName: '', license: '', commercial: '',
-    owner: '', phone: '', email: '',
+    owner: '', phone: '', email: '', password: '',
     address: '', district: '',
   });
 
@@ -41,6 +45,7 @@ export function NRegister() {
           <Field label={t(lang, 'ownerName')} value={form.owner} onChangeText={patch('owner')} />
           <Field label={t(lang, 'ownerPhone')} value={form.phone} onChangeText={patch('phone')} keyboardType="phone-pad" icon="phone" />
           <Field label={t(lang, 'ownerEmail')} value={form.email} onChangeText={patch('email')} keyboardType="email-address" icon="mail" />
+          <Field label={t(lang, 'password')} value={form.password} onChangeText={patch('password')} secureTextEntry icon="lock" />
         </>
       ),
     },
@@ -80,18 +85,32 @@ export function NRegister() {
       </ScrollView>
 
       <View style={{ padding: 22, paddingBottom: 34, borderTopWidth: 1, borderTopColor: C.line }}>
+        {err ? (
+          <Text style={{ fontFamily: F.body, fontSize: 13, color: C.danger, marginBottom: 10, textAlign: 'center' }}>{err}</Text>
+        ) : null}
         <Button
-          onPress={() => {
-            if (isLast) {
-              actions.setReg(form);
-              navigation.navigate('NKyc');
+          onPress={async () => {
+            if (!isLast) { setStep(step + 1); return; }
+            setErr('');
+            actions.setReg(form);
+            if (isSupabaseConfigured) {
+              setBusy(true);
+              try {
+                await actions.auth.signUp(form.email.trim(), form.password, form.owner.trim());
+                await api.createNursery(form);
+                navigation.navigate('NKyc');
+              } catch (e: any) {
+                setErr(e?.message ?? 'Sign-up failed');
+              } finally {
+                setBusy(false);
+              }
             } else {
-              setStep(step + 1);
+              navigation.navigate('NKyc');
             }
           }}
+          disabled={busy}
           full
           size="lg"
-          icon={isLast ? undefined : undefined}
           iconRight={isLast ? undefined : 'arrowRight'}
         >
           {isLast ? t(lang, 'submit') : t(lang, 'next')}

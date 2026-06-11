@@ -6,6 +6,7 @@ import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { Button, TopBar, Field } from '../components';
 import { useApp } from '../context/AppContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { t } from '../i18n';
 
 export function RegisterScreen({ navigation }: any) {
@@ -35,11 +36,25 @@ export function RegisterScreen({ navigation }: any) {
     }
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!valid) { setErr('Enter a valid Jordan mobile number (9 digits, starts with 7).'); return; }
     setErr(''); setLoading(true);
+    // Keep the entered details locally; they are pushed to the profile once the
+    // OTP is verified (and the session exists) on the next screen.
     actions.updateUser({ name: name.trim(), photoUri, phone: digits });
-    setTimeout(() => { setLoading(false); navigation.push('otp', { phone: digits }); }, 900);
+
+    if (isSupabaseConfigured) {
+      try {
+        await actions.auth.sendOtp(digits);
+        navigation.push('otp', { phone: digits, mode: 'register' });
+      } catch (e: any) {
+        setErr(e?.message ?? 'Could not send the verification code.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    setTimeout(() => { setLoading(false); navigation.push('otp', { phone: digits, mode: 'register' }); }, 900);
   };
 
   return (

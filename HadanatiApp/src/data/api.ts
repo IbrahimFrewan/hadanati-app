@@ -1,0 +1,182 @@
+// Typed data-access layer: maps Supabase rows <-> the app's existing types
+// (see ./index.ts). Every screen keeps consuming the same AppStore shape; only
+// this module talks to the backend. All calls assume `isSupabaseConfigured`.
+import { supabase } from '../lib/supabase';
+import { AppStore, Booking, Child, Notification, Thread } from './index';
+
+const E164 = (digits: string) => `+962${digits.replace(/\D/g, '')}`;
+
+function fmtTime(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+// ---- auth -------------------------------------------------------------------
+export const auth = {
+  async sendOtp(phoneDigits: string) {
+    const { error } = await supabase.auth.signInWithOtp({ phone: E164(phoneDigits) });
+    if (error) throw error;
+  },
+  async verifyOtp(phoneDigits: string, token: string) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: E164(phoneDigits), token, type: 'sms',
+    });
+    if (error) throw error;
+    return data.user;
+  },
+  async signOut() {
+    await supabase.auth.signOut();
+  },
+  async currentUserId(): Promise<string | null> {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.user.id ?? null;
+  },
+};
+
+// ---- profile ----------------------------------------------------------------
+export async function fetchProfile(userId: string): Promise<AppStore['user']> {
+  const { data } = await supabase
+    .from('profiles').select('full_name, phone, email, avatar_url')
+    .eq('id', userId).single();
+  return {
+    name: data?.full_name ?? '',
+    phone: (data?.phone ?? '').replace(/^\+962/, ''),
+    email: data?.email ?? '',
+    photoUri: data?.avatar_url ?? '',
+  };
+}
+
+export async function upsertProfile(userId: string, u: Partial<AppStore['user']>) {
+  const patch: Record<string, unknown> = { id: userId };
+  if (u.name !== undefined) patch.full_name = u.name;
+  if (u.phone !== undefined) patch.phone = u.phone ? E164(u.phone) : null;
+  if (u.email !== undefined) patch.email = u.email;
+  if (u.photoUri !== undefined) patch.avatar_url = u.photoUri;
+  const { error } = await supabase.from('profiles').upsert(patch);
+  if (error) throw error;
+}
+
+// ---- children ---------------------------------------------------------------
+function mapChild(r: any): Child {
+  return {
+    id: r.id, name: r.name, dob: r.dob ?? '', ageGroup: r.group_ ?? '',
+    allergies: r.allergies ?? '', photoUri: r.photo_url ?? '',
+  };
+}
+
+export async function fetchChildren(userId: string): Promise<Child[]> {
+  const { data } = await supabase.from('children')
+    .select('*').eq('parent_id', userId).order('created_at');
+  return (data ?? []).map(mapChild);
+}
+
+export async function addChild(userId: string, ch: Omit<Child, 'id'>): Promise<Child> {
+  const { data, error } = await supabase.from('children').insert({
+    parent_id: userId, name: ch.name, dob: ch.dob || null,
+    group_: ch.ageGroup || null, allergies: ch.allergies ?? '', photo_url: ch.photoUri || null,
+  }).select('*').single();
+  if (error) throw error;
+  return mapChild(data);
+}
+
+export async function updateChildPhoto(childId: string, uri: string) {
+  await supabase.from('children').update({ photo_url: uri }).eq('id', childId);
+}
+
+// ---- favorites --------------------------------------------------------------
+export async function fetchFavorites(userId: string): Promise<string[]> {
+  const { data } = await supabase.from('favorites')
+    .select('nursery_id').eq('parent_id', userId);
+  return (data ?? []).map((r: any) => r.nursery_id);
+}
+
+export async function setFavorite(userId: string, nurseryId: string, on: boolean) {
+  if (on) {
+    await supabase.from('favorites').upsert({ parent_id: userId, nursery_id: nurseryId });
+  } else {
+    await supabase.from('favorites').delete()
+      .eq('parent_id', userId).eq('nursery_id', nurseryId);
+  }
+}
+
+// ---- bookings ---------------------------------------------------------------
+function mapBooking(r: any): Booking {
+  return {
+    id: r.id, nurseryId: r.nursery_id, childId: r.child_id,
+    type: r.type, status: r.status,
+    dates: r.start_date ?? 'Upcoming', price: Number(r.price), unit: r.unit,
+  };
+}
+
+export async function fetchBookings(userId: string): Promise<Booking[]> {
+  const { data } = await supabase.from('bookings')
+    .select('*').eq('parent_id', userId).order('created_at', { ascending: false });
+  return (data ?? []).map(mapBooking);
+}
+
+/** Create a booking request (escrow authorize) via the trusted Edge Function. */
+export async function createBookingRequest(input: {
+  nurseryId: string; childId: string; type: string; ageGroup?: string;
+  schedule?: string; fromDate?: string; method?: string;
+}) {
+  const { data, error } = await supabase.functions.invoke('confirm-booking', { body: input });
+  if (error) throw error;
+  return data as { ok: boolean; requestId: string; price: number; unit: string };
+}
+
+// ---- notifications ----------------------------------------------------------
+function mapNotif(r: any): Notification {
+  return {
+    id: r.id, kind: r.kind, title: r.title, body: r.body ?? '',
+    time: fmtTime(r.created_at), read: r.read, target: r.target ?? null,
+  };
+}
+
+export async function fetchNotifications(userId: string): Promise<Notification[]> {
+  const { data } = await supabase.from('notifications')
+    .select('*').eq('recipient_id', userId).order('created_at', { ascending: false });
+  return (data ?? []).map(mapNotif);
+}
+
+export async function markNotificationsRead(userId: string) {
+  await supabase.from('notifications').update({ read: true })
+    .eq('recipient_id', userId).eq('read', false);
+}
+
+// ---- messaging --------------------------------------------------------------
+export async function fetchThreads(userId: string): Promise<Thread[]> {
+  const { data: threads } = await supabase.from('message_threads')
+    .select('id, nursery_id, last_message, last_at').eq('parent_id', userId)
+    .order('last_at', { ascending: false });
+
+  const result: Thread[] = [];
+  for (const th of threads ?? []) {
+    const { data: msgs } = await supabase.from('messages')
+      .select('sender_id, body, created_at').eq('thread_id', th.id)
+      .order('created_at');
+    result.push({
+      id: th.id, nurseryId: th.nursery_id, unread: 0,
+      last: th.last_message ?? '', time: fmtTime(th.last_at),
+      messages: (msgs ?? []).map((m: any) => ({
+        me: m.sender_id === userId, text: m.body, time: fmtTime(m.created_at),
+      })),
+    });
+  }
+  return result;
+}
+
+export async function sendMessage(userId: string, threadId: string, text: string) {
+  await supabase.from('messages').insert({ thread_id: threadId, sender_id: userId, body: text });
+  await supabase.from('message_threads')
+    .update({ last_message: text, last_at: new Date().toISOString() }).eq('id', threadId);
+}
+
+// ---- full hydration ---------------------------------------------------------
+export async function hydrateStore(userId: string): Promise<Partial<AppStore>> {
+  const [user, children, favorites, bookings, notifications, threads] = await Promise.all([
+    fetchProfile(userId), fetchChildren(userId), fetchFavorites(userId),
+    fetchBookings(userId), fetchNotifications(userId), fetchThreads(userId),
+  ]);
+  return { user, children, favorites, bookings, notifications, threads };
+}

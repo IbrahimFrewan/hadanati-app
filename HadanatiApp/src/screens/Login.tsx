@@ -5,10 +5,11 @@ import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { Button, TopBar, Field } from '../components';
 import { useApp } from '../context/AppContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { t } from '../i18n';
 
 export function LoginScreen({ navigation }: any) {
-  const { lang, store } = useApp();
+  const { lang, store, actions } = useApp();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
@@ -17,8 +18,25 @@ export function LoginScreen({ navigation }: any) {
   const digits = phone.replace(/\D/g, '');
   const valid = digits.length === 9 && digits[0] === '7';
 
-  const submit = () => {
+  const submit = async () => {
     if (!valid) { setErr(t(lang, 'phoneError')); return; }
+
+    // Backend wired: send a real SMS OTP (the server is the source of truth for
+    // who is registered), then verify on the next screen.
+    if (isSupabaseConfigured) {
+      setErr(''); setLoading(true);
+      try {
+        await actions.auth.sendOtp(digits);
+        navigation.push('otp', { phone: digits, mode: 'login' });
+      } catch (e: any) {
+        setErr(e?.message ?? t(lang, 'phoneError'));
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Mock fallback (no backend configured): validate against the local store.
     if (!store.user.phone || store.user.phone !== digits) {
       setErr(t(lang, 'phoneNotRegistered'));
       return;

@@ -5,10 +5,11 @@ import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { TopBar } from '../components';
 import { useApp } from '../context/AppContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { t } from '../i18n';
 
 export function OtpScreen({ navigation, route }: any) {
-  const { lang } = useApp();
+  const { lang, store, actions } = useApp();
   const isRTL = lang === 'ar';
   const phone = route.params?.phone || '7 9123 4567';
   const mode = route.params?.mode || 'register';
@@ -16,6 +17,7 @@ export function OtpScreen({ navigation, route }: any) {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
   const [verifying, setVerifying] = useState(false);
+  const [err, setErr] = useState('');
   const refs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
@@ -28,10 +30,34 @@ export function OtpScreen({ navigation, route }: any) {
     const d = v.replace(/\D/g, '').slice(-1);
     const next = [...code]; next[i] = d; setCode(next);
     if (d && i < 5) refs.current[i + 1]?.focus();
-    if (next.every(x => x)) {
-      setVerifying(true);
-      setTimeout(() => navigation.replace(mode === 'login' ? 'tabs' : 'profileSetup'), 800);
+    if (next.every(x => x)) submit(next.join(''));
+  };
+
+  const submit = async (full: string) => {
+    setErr('');
+    setVerifying(true);
+
+    if (isSupabaseConfigured) {
+      try {
+        await actions.auth.verifyOtp(phone, full);
+        // Now authenticated: persist the details captured during sign-up.
+        if (mode !== 'login') {
+          actions.updateUser({
+            name: store.user.name, phone: store.user.phone, photoUri: store.user.photoUri,
+          });
+        }
+        navigation.replace(mode === 'login' ? 'tabs' : 'profileSetup');
+      } catch (e: any) {
+        setVerifying(false);
+        setErr(e?.message ?? 'Invalid code — please try again.');
+        setCode(['', '', '', '', '', '']);
+        refs.current[0]?.focus();
+      }
+      return;
     }
+
+    // Mock fallback (no backend configured).
+    setTimeout(() => navigation.replace(mode === 'login' ? 'tabs' : 'profileSetup'), 800);
   };
 
   const onKey = (i: number, key: string) => {
@@ -70,6 +96,10 @@ export function OtpScreen({ navigation, route }: any) {
             />
           ))}
         </View>
+
+        {err ? (
+          <Text style={{ fontSize: 13, color: C.danger, marginBottom: 12, textAlign: isRTL ? 'right' : 'left', fontFamily: F.body }}>{err}</Text>
+        ) : null}
 
         {verifying ? (
           <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 7 }}>
