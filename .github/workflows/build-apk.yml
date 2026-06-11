@@ -75,7 +75,9 @@ jobs:
           summary=$(grep -iE "BUILD SUCCESSFUL|BUILD FAILED|Task :app:.*[Rr]elease|\.apk|\.aab|outputs/|variant|[Ss]igning|bundleReleaseJsAndAssets" /tmp/gradle.log | tail -40 | sed ':a;N;$!ba;s/\n/%0A/g')
           echo "::notice title=gradle summary (${{ matrix.app }})::${summary:-none}"
           if [ "$code" != "0" ]; then
-            err=$(grep -nE "FAILURE:|What went wrong|Caused by:|error:|Execution failed|A problem occurred|SDK location|Could not |Failed to|not found|NDK|aapt2|OutOfMemory" /tmp/gradle.log | tail -30 | sed ':a;N;$!ba;s/\n/%0A/g')
+            # Capture the whole failure block (from "FAILURE:" onward) so the
+            # actual cause — not just "What went wrong:" — is in the annotation.
+            err=$(awk '/FAILURE: Build failed with an exception/{f=1} f{print}' /tmp/gradle.log | head -45 | sed ':a;N;$!ba;s/\n/%0A/g')
             echo "::error title=Gradle fail (${{ matrix.app }})::${err}"
             exit 1
           fi
