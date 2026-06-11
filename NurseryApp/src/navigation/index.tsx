@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
 import { useN } from '../context/NurseryContext';
+import { withBoundary } from '../components/ErrorBoundary';
 
 // Screens
 import { NLogin } from '../screens/NLogin';
@@ -55,6 +56,12 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
+
+const DashboardBounded = withBoundary(Dashboard, 'Dashboard');
+const AttendanceBounded = withBoundary(Attendance, 'Attendance');
+const NRequestsBounded = withBoundary(NRequests, 'NRequests');
+const NMessagesBounded = withBoundary(NMessages, 'NMessages');
+const NProfileAccountBounded = withBoundary(NProfileAccount, 'NProfileAccount');
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const { store } = useN();
@@ -110,11 +117,11 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 function MainTabs() {
   return (
     <Tab.Navigator tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="DashboardTab" component={Dashboard} />
-      <Tab.Screen name="AttendanceTab" component={Attendance} />
-      <Tab.Screen name="RequestsTab" component={NRequests} />
-      <Tab.Screen name="MessagesTab" component={NMessages} />
-      <Tab.Screen name="AccountTab" component={NProfileAccount} />
+      <Tab.Screen name="DashboardTab" component={DashboardBounded} />
+      <Tab.Screen name="AttendanceTab" component={AttendanceBounded} />
+      <Tab.Screen name="RequestsTab" component={NRequestsBounded} />
+      <Tab.Screen name="MessagesTab" component={NMessagesBounded} />
+      <Tab.Screen name="AccountTab" component={NProfileAccountBounded} />
     </Tab.Navigator>
   );
 }

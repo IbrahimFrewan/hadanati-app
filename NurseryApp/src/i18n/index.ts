@@ -8,6 +8,7 @@ const strings: Record<string, Record<string, string>> = {
     signIn: 'Sign in',
     register: 'Register your nursery',
     forgotPassword: 'Forgot password?',
+    phoneNotRegistered: 'This number is not registered. Please register your nursery first.',
     // Register
     registerTitle: 'Register your nursery',
     step: 'Step',
@@ -251,6 +252,7 @@ const strings: Record<string, Record<string, string>> = {
     signIn: 'تسجيل الدخول',
     register: 'تسجيل حضانتك',
     forgotPassword: 'نسيت كلمة المرور؟',
+    phoneNotRegistered: 'هذا الرقم غير مسجّل. الرجاء تسجيل حضانتك أولاً.',
     // Register
     registerTitle: 'تسجيل حضانتك',
     step: 'الخطوة',

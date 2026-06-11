@@ -14,7 +14,7 @@ export const C = {
   tint: '#dfeae0',
 };
 
-export const F = {
+const LATIN_FONTS = {
   display: 'Baloo2_700Bold',
   displayMedium: 'Baloo2_500Medium',
   displayBold: 'Baloo2_700Bold',
@@ -23,3 +23,22 @@ export const F = {
   bodyMedium: 'Rubik_500Medium',
   bodyBold: 'Rubik_700Bold',
 };
+
+const ARABIC_FONTS = {
+  display: 'Cairo_700Bold',
+  displayMedium: 'Cairo_500Medium',
+  displayBold: 'Cairo_700Bold',
+  displayExtraBold: 'Cairo_800ExtraBold',
+  body: 'Cairo_400Regular',
+  bodyMedium: 'Cairo_500Medium',
+  bodyBold: 'Cairo_700Bold',
+};
+
+export const F = { ...LATIN_FONTS };
+
+export let IS_RTL = false;
+
+export function setLangFonts(lang: string) {
+  Object.assign(F, lang === 'AR' ? ARABIC_FONTS : LATIN_FONTS);
+  IS_RTL = lang === 'AR';
+}

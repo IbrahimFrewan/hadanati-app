@@ -14,9 +14,10 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function NLogin() {
   const navigation = useNavigation<Nav>();
-  const { lang } = useN();
+  const { lang, store } = useN();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [err, setErr] = useState('');
 
   return (
     <View style={{ flex: 1, backgroundColor: C.cream }}>
@@ -39,7 +40,7 @@ export function NLogin() {
         <Field
           label={t(lang, 'phone')}
           value={phone}
-          onChangeText={setPhone}
+          onChangeText={v => { setPhone(v); setErr(''); }}
           placeholder="+962 7X XXX XXXX"
           keyboardType="phone-pad"
           icon="phone"
@@ -57,7 +58,23 @@ export function NLogin() {
           <Text style={{ fontFamily: F.body, color: C.green, fontSize: 13 }}>{t(lang, 'forgotPassword')}</Text>
         </TouchableOpacity>
 
-        <Button onPress={() => navigation.replace('MainTabs')} full size="lg">
+        {err ? (
+          <Text style={{ fontFamily: F.body, fontSize: 13, color: C.danger, marginBottom: 12, textAlign: 'center' }}>{err}</Text>
+        ) : null}
+        <Button onPress={() => {
+          const digits = phone.replace(/\D/g, '');
+          const regPhone = store.registration.phone.replace(/\D/g, '');
+          if (regPhone && digits !== regPhone) {
+            setErr(t(lang, 'phoneNotRegistered'));
+            return;
+          }
+          if (!regPhone) {
+            setErr(t(lang, 'phoneNotRegistered'));
+            return;
+          }
+          setErr('');
+          navigation.replace('MainTabs');
+        }} full size="lg">
           {t(lang, 'signIn')}
         </Button>
 

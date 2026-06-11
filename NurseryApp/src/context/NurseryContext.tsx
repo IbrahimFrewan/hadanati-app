@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { seedNursery, NurseryStore } from '../data';
+import { loadStore, saveStore, loadLang, saveLang } from '../data/storage';
+import { setLangFonts } from '../theme';
 
 interface NurseryContextType {
   store: NurseryStore;
@@ -23,7 +25,32 @@ const NurseryContext = createContext<NurseryContextType | null>(null);
 
 export function NurseryProvider({ children }: { children: React.ReactNode }) {
   const [store, setStore] = useState<NurseryStore>(seedNursery);
-  const [lang, setLang] = useState('EN');
+  const [lang, setLangState] = useState('EN');
+  const [hydrated, setHydrated] = useState(false);
+
+  setLangFonts(lang);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const [saved, savedLang] = await Promise.all([loadStore(), loadLang()]);
+      if (!active) return;
+      if (saved) setStore(s => ({ ...s, ...saved }));
+      if (savedLang) setLangState(savedLang);
+      setHydrated(true);
+    })();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) saveStore(store);
+  }, [store, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) saveLang(lang);
+  }, [lang, hydrated]);
+
+  const setLang = (l: string) => setLangState(l);
 
   const actions: NurseryContextType['actions'] = {
     patch: (p) => setStore((s) => ({ ...s, ...p })),
@@ -56,6 +83,7 @@ export function NurseryProvider({ children }: { children: React.ReactNode }) {
       {children}
     </NurseryContext.Provider>
   );
+
 }
 
 export function useN() {
