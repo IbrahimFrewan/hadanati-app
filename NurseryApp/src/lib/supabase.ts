@@ -14,11 +14,19 @@ const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
  */
 export const isSupabaseConfigured = Boolean(url && anonKey);
 
-export const supabase = createClient(url, anonKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
+// IMPORTANT: createClient throws ("supabaseUrl is required.") on empty values,
+// and this module is imported at app startup — so an unconfigured build must
+// NOT construct a client from the real (empty) env. Use inert placeholders;
+// every call site is gated by isSupabaseConfigured, so they are never used.
+export const supabase = createClient(
+  isSupabaseConfigured ? url : 'https://placeholder.supabase.co',
+  isSupabaseConfigured ? anonKey : 'placeholder-anon-key',
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: isSupabaseConfigured,
+      persistSession: isSupabaseConfigured,
+      detectSessionInUrl: false,
+    },
   },
-});
+);
