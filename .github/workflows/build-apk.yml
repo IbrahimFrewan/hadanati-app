@@ -1,13 +1,36 @@
-name: Build Android APK
+name: Build Android APKs
+
+# Builds installable APKs for BOTH apps directly on GitHub's runners using
+# `expo prebuild` + Gradle — no EAS, no Expo token, no build quota.
+# Each APK is uploaded as a downloadable artifact on the run's summary page.
+#
+# Optional: set repo secrets EXPO_PUBLIC_SUPABASE_URL and
+# EXPO_PUBLIC_SUPABASE_ANON_KEY to bake the backend connection into the build.
+# Without them the apps build fine and run on local (mock) data.
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
+    paths:
+      - 'HadanatiApp/**'
+      - 'NurseryApp/**'
+      - '.github/workflows/build-apk.yml'
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [HadanatiApp, NurseryApp]
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -15,63 +38,35 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: HadanatiApp/package-lock.json
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
       - name: Install dependencies
-        working-directory: HadanatiApp
+        working-directory: ${{ matrix.app }}
         run: npm install
 
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
+      - name: Prebuild native Android project
+        working-directory: ${{ matrix.app }}
+        run: npx expo prebuild --platform android --no-install --non-interactive
 
-      - name: Verify token
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas whoami
-
-      - name: Initialize EAS project
-        working-directory: HadanatiApp
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas init --non-interactive --force || true
-
-      # --- Key change #1: wait for the build instead of --no-wait, and capture the APK URL ---
-      - name: Build APK and capture URL
-        id: build
-        working-directory: HadanatiApp
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: Build release APK (debug-signed)
+        working-directory: ${{ matrix.app }}/android
         run: |
-          # --wait blocks until the build finishes; --json gives us a machine-readable result
-          BUILD_JSON=$(eas build --platform android --profile preview --non-interactive --wait --json)
-          echo "$BUILD_JSON" > build-result.json
-          # Extract the artifact download URL from the JSON (first build object)
-          APK_URL=$(node -e "const b=require('./build-result.json'); const u=(Array.isArray(b)?b[0]:b)?.artifacts?.buildUrl || (Array.isArray(b)?b[0]:b)?.artifacts?.applicationArchiveUrl; if(!u){console.error('No APK URL found'); process.exit(1)} console.log(u)")
-          echo "apk_url=$APK_URL" >> "$GITHUB_OUTPUT"
-          echo "APK URL: $APK_URL"
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
-      # --- Key change #2: download the APK file from the EAS URL onto the runner ---
-      - name: Download APK
-        working-directory: HadanatiApp
-        run: |
-          curl -L -o hadanati.apk "${{ steps.build.outputs.apk_url }}"
-          ls -lh hadanati.apk
-
-      # --- Key change #3: upload it as a GitHub Actions artifact (downloadable from the run page) ---
-      - name: Upload APK as artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hadanati-apk
-          path: HadanatiApp/hadanati.apk
+          name: ${{ matrix.app }}-apk
+          path: ${{ matrix.app }}/android/app/build/outputs/apk/**/*.apk
           retention-days: 30
-
-      # --- Optional: also publish it as a GitHub Release asset (gives a permanent public download link) ---
-      # Comment this whole step out if you don't want public releases.
-      - name: Publish to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: build-${{ github.run_number }}
-          name: Hadanati APK build ${{ github.run_number }}
-          files: HadanatiApp/hadanati.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          if-no-files-found: error
