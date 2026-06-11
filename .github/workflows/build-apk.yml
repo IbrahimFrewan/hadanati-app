@@ -1,42 +1,35 @@
-name: Build Android APKs
+name: Build Android APKs (EAS)
 
-# Builds installable APKs for BOTH apps directly on GitHub's runners using
-# `expo prebuild` + Gradle — no EAS, no Expo token, no build quota.
-# Each APK is uploaded as a downloadable artifact on the run's summary page.
-#
-# Optional: set repo secrets EXPO_PUBLIC_SUPABASE_URL and
-# EXPO_PUBLIC_SUPABASE_ANON_KEY to bake the backend connection into the build.
-# Without them the apps build fine and run on local (mock) data.
+# Builds APKs for BOTH apps on Expo's EAS servers, then downloads each APK and
+# uploads it as a GitHub artifact. Requires the repo secret EXPO_TOKEN.
+# Manual trigger only (to control EAS build quota).
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'HadanatiApp/**'
-      - 'NurseryApp/**'
-      - '.github/workflows/build-apk.yml'
 
 concurrency:
-  group: build-apk-${{ github.ref }}
-  cancel-in-progress: true
+  group: build-apk-eas-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         app: [HadanatiApp, NurseryApp]
     env:
-      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
-      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-      # Metro's release JS bundling (bundleReleaseJsAndAssets) OOMs/hangs on CI
-      # with the default Node heap — give it room.
-      NODE_OPTIONS: --max-old-space-size=4096
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check EXPO_TOKEN is set
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN secret is missing. Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
 
       - uses: actions/setup-node@v4
         with:
@@ -44,63 +37,46 @@ jobs:
           cache: npm
           cache-dependency-path: ${{ matrix.app }}/package-lock.json
 
-      - uses: actions/setup-java@v4
+      - uses: expo/expo-github-action@v8
         with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Accept Android SDK licenses
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
         working-directory: ${{ matrix.app }}
         run: npm install
 
-      - name: Prebuild native Android project
+      - name: Ensure EAS project is initialized
         working-directory: ${{ matrix.app }}
-        run: npx expo prebuild --platform android --no-install --non-interactive
+        run: eas init --non-interactive --force || true
 
-      - name: Build release APK (debug-signed)
-        working-directory: ${{ matrix.app }}/android
+      - name: EAS build (Android APK, profile=preview)
+        working-directory: ${{ matrix.app }}
+        run: eas build --platform android --profile preview --non-interactive --wait
+
+      - name: Resolve APK download URL
+        id: url
+        working-directory: ${{ matrix.app }}
         run: |
-          # Raise Gradle JVM memory (R8/dexing) — last value in the file wins.
-          echo "org.gradle.jvmargs=-Xmx5120m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
-          chmod +x ./gradlew
-          set +e
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace --max-workers=2 2>&1 | tee /tmp/gradle.log
-          code=${PIPESTATUS[0]}
-          set -e
-          echo "gradle exit=$code"
-          # Surface a task/output summary as an annotation (logs are unreachable here).
-          summary=$(grep -iE "BUILD SUCCESSFUL|BUILD FAILED|Task :app:.*[Rr]elease|\.apk|\.aab|outputs/|variant|[Ss]igning|bundleReleaseJsAndAssets" /tmp/gradle.log | tail -40 | sed ':a;N;$!ba;s/\n/%0A/g')
-          echo "::notice title=gradle summary (${{ matrix.app }})::${summary:-none}"
-          if [ "$code" != "0" ]; then
-            # Capture the whole failure block (from "FAILURE:" onward) so the
-            # actual cause — not just "What went wrong:" — is in the annotation.
-            err=$(awk '/FAILURE: Build failed with an exception/{f=1} f{print}' /tmp/gradle.log | head -45 | sed ':a;N;$!ba;s/\n/%0A/g')
-            echo "::error title=Gradle fail (${{ matrix.app }})::${err}"
+          URL=$(eas build:list --platform android --limit 1 --non-interactive --json \
+            | jq -r '.[0].artifacts.buildUrl // .[0].artifacts.applicationArchiveUrl // empty')
+          echo "Latest build artifact: $URL"
+          if [ -z "$URL" ]; then
+            echo "::error title=No APK URL (${{ matrix.app }})::EAS build finished without a downloadable artifact (check the EAS build logs / quota)."
             exit 1
           fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
-      - name: Locate APK
-        if: always()
+      - name: Download APK
+        working-directory: ${{ matrix.app }}
         run: |
-          echo "----- outputs tree -----"
-          find ${{ matrix.app }}/android/app/build/outputs -type f 2>/dev/null || echo "(no outputs dir)"
-          tree=$(find ${{ matrix.app }}/android/app/build/outputs -type f 2>/dev/null | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')
-          echo "::notice title=outputs (${{ matrix.app }})::${tree:-EMPTY}"
-          found=$(find ${{ matrix.app }}/android -name '*.apk' 2>/dev/null)
-          if [ -z "$found" ]; then
-            echo "::error title=No APK (${{ matrix.app }})::assembleRelease produced no .apk under android/"
-          else
-            echo "::notice title=APK path (${{ matrix.app }})::${found//$'\n'/%0A}"
-          fi
+          curl -L -o "${{ matrix.app }}.apk" "${{ steps.url.outputs.url }}"
+          ls -lh "${{ matrix.app }}.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.app }}-apk
+          path: ${{ matrix.app }}/${{ matrix.app }}.apk
           retention-days: 30
           if-no-files-found: error
-          path: |
-            ${{ matrix.app }}/android/**/*.apk
