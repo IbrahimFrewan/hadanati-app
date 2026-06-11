@@ -33,6 +33,26 @@ Set function secrets (Project Settings → Edge Functions):
 automatically; add `CRON_SECRET` (for the payout cron) and any payment-gateway
 keys.
 
+### Enable the access-token hook (required for roles)
+
+`profiles.role` is the source of truth for authorization. A Custom Access Token
+Hook injects it into every JWT as `app_metadata.role`, which `is_admin()` /
+`role_of()` read. Locally this is on via `config.toml`. For a hosted project,
+enable it once: **Authentication → Hooks → Customize Access Token** →
+`public.custom_access_token_hook`. (RLS also has a safe DB fallback, so admin
+access still works before the hook is enabled — but enable it for correctness.)
+
+### Making an admin
+
+Admins are never created by client sign-up (a client can only set non-privileged
+roles). Create the user, then promote in SQL:
+
+```sql
+update public.profiles set role = 'admin' where email = 'you@example.com';
+```
+
+The new role lands in the JWT on the user's next sign-in (or token refresh).
+
 ## Layout
 ```
 config.toml                 project config (auth: phone OTP + email, storage)

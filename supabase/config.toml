@@ -38,6 +38,13 @@ enable_confirmations = true
 enable_signup = true
 enable_confirmations = false
 
+# Inject profiles.role into the JWT (app_metadata.role) on every token issuance,
+# so RLS (is_admin()/role_of()) can authorize from the claim. The function is
+# defined in migration 20260611120200_auth_role.sql.
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/custom_access_token_hook"
+
 [storage]
 enabled = true
 file_size_limit = "50MiB"
