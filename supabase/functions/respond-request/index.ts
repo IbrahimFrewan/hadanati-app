@@ -41,8 +41,21 @@ Deno.serve(async (req) => {
     return json({ ok: true, status: "declined" });
   }
 
-  // accept: capture payment + create booking (+ invoice). Capacity is kept in
-  // sync automatically by the bookings trigger (sync_capacity).
+  // accept: authoritative capacity check FIRST — the parent-side check at
+  // request time can be stale by the time the nursery accepts.
+  const { data: child } = await db.from("children")
+    .select("group_").eq("id", r.child_id).single();
+  if (child?.group_) {
+    const { data: grp } = await db.from("capacity_groups")
+      .select("total, filled")
+      .eq("nursery_id", r.nursery_id).eq("group_", child.group_).maybeSingle();
+    if (grp && grp.filled >= grp.total) {
+      return json({ error: "no capacity in this age group" }, 409);
+    }
+  }
+
+  // capture payment + create booking (+ invoice). capacity_groups.filled is
+  // kept in sync automatically by the bookings trigger (sync_capacity).
   await db.from("booking_requests").update({ status: "accepted" }).eq("id", requestId);
   await db.from("payments").update({ status: "captured" }).eq("request_id", requestId);
 

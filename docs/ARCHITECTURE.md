@@ -354,8 +354,8 @@ Uploads go direct to Storage via signed upload URLs (keeps large files off the f
 | `submit-kyc` | Nursery app | Validate uploaded docs, move nursery → `pending`. |
 | `confirm-booking` | Parent app | Transactional capacity check + create booking + authorize payment. |
 | `respond-request` | Nursery app | Accept (capture payment) / decline (refund). |
-| `verify-qr` | Nursery app | Validate pickup/drop-off token, write attendance. |
-| `payment-webhook` | Gateway | Idempotent payment state updates. |
+| `verify-qr` *(planned — not yet implemented; attendance currently written via RLS-guarded upsert)* | Nursery app | Validate pickup/drop-off token, write attendance. |
+| `payment-webhook` *(planned — implemented with the real gateway integration)* | Gateway | Idempotent payment state updates. |
 | `run-payouts` | pg_cron (monthly) | Aggregate captured payments → payouts → disburse. |
 | `send-push` | Internal | Fan-out push notifications. |
 | `admin-action` | Admin web | Approve/reject/suspend with audit logging. |

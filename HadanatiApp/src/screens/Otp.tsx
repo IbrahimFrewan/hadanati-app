@@ -64,6 +64,21 @@ export function OtpScreen({ navigation, route }: any) {
     if (key === 'Backspace' && !code[i] && i > 0) refs.current[i - 1]?.focus();
   };
 
+  // Actually resend the SMS when a backend is configured (login must not
+  // create an account for an unregistered number).
+  const resend = async () => {
+    setErr('');
+    if (isSupabaseConfigured) {
+      try {
+        await actions.auth.sendOtp(phone, mode !== 'login');
+      } catch (e: any) {
+        setErr(e?.message ?? 'Could not resend the code.');
+        return;
+      }
+    }
+    setTimer(30);
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>
       <TopBar title={t(lang, 'verifyNumber')} onBack={() => navigation.goBack()} />
@@ -111,7 +126,7 @@ export function OtpScreen({ navigation, route }: any) {
             {timer > 0 ? (
               <>{t(lang, 'resendIn')}<Text style={{ fontWeight: '700', color: C.ink }}>0:{String(timer).padStart(2, '0')}</Text></>
             ) : (
-              <Text onPress={() => setTimer(30)} style={{ color: C.dgreen, fontWeight: '700' }}>{t(lang, 'resendCode')}</Text>
+              <Text onPress={resend} style={{ color: C.dgreen, fontWeight: '700' }}>{t(lang, 'resendCode')}</Text>
             )}
           </Text>
         )}

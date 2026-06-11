@@ -94,10 +94,14 @@ async function fetchRoster(nurseryId: string): Promise<RosterChild[]> {
 
   return (bookings ?? []).map((b: any) => {
     const a = byBooking.get(b.id);
+    // DB enum has 'not_in' which the app's union doesn't — treat it as 'out'.
+    const raw = a?.status as string | undefined;
+    const status: RosterChild['status'] =
+      raw && raw !== 'not_in' ? (raw as RosterChild['status']) : 'out';
     return {
       id: b.id, name: b.child?.name ?? 'Child', age: '', group: b.child?.group_ ?? '',
       parent: b.parent?.full_name ?? '', parentPhone: b.parent?.phone ?? '',
-      status: (a?.status as RosterChild['status']) ?? 'out',
+      status,
       inAt: fmtTime(a?.in_at ?? null), note: a?.note ?? '', booking: b.type,
     };
   });
@@ -179,13 +183,25 @@ export async function setAttendance(
   nurseryId: string, bookingId: string, childId: string | null,
   status: RosterChild['status'], time?: string,
 ) {
+  // attendance.child_id is NOT NULL — resolve it from the booking when the
+  // caller doesn't have it (roster rows are keyed by booking id).
+  let cid = childId;
+  if (!cid) {
+    const { data } = await supabase.from('bookings')
+      .select('child_id').eq('id', bookingId).single();
+    cid = data?.child_id ?? null;
+  }
+  if (!cid) throw new Error(`No child found for booking ${bookingId}`);
+
   const patch: Record<string, unknown> = {
-    booking_id: bookingId, nursery_id: nurseryId, date: todayISO(), status,
+    booking_id: bookingId, child_id: cid, nursery_id: nurseryId,
+    date: todayISO(), status,
   };
   if (status === 'in') patch.check_in_at = new Date().toISOString();
   if (status === 'out') patch.check_out_at = new Date().toISOString();
-  if (childId) patch.child_id = childId;
-  await supabase.from('attendance').upsert(patch, { onConflict: 'booking_id,date' });
+  const { error } = await supabase.from('attendance')
+    .upsert(patch, { onConflict: 'booking_id,date' });
+  if (error) throw error;
 }
 
 export async function setListed(nurseryId: string, listed: boolean) {
