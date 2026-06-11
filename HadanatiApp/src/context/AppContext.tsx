@@ -80,6 +80,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const toastRef = useRef<((m: string) => void) | null>(null);
   const userIdRef = useRef<string | null>(null);
+  const rtCleanupRef = useRef<(() => void) | null>(null);
+  const rtTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const remote = isSupabaseConfigured;
   const w = (e: unknown) => console.warn('[sync]', e);
 
@@ -130,19 +132,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // When a backend is configured, track the auth session and hydrate the store
   // from the server on sign-in. Local cache above still gives an instant paint.
+  // Also open a Realtime channel so booking/chat/notification changes stream in.
   useEffect(() => {
     if (!remote) return;
+
+    const scheduleHydrate = (uid: string) => {
+      if (rtTimerRef.current) clearTimeout(rtTimerRef.current);
+      rtTimerRef.current = setTimeout(() => hydrateFromServer(uid), 300);
+    };
+    const connect = (uid: string) => {
+      hydrateFromServer(uid);
+      rtCleanupRef.current?.();
+      rtCleanupRef.current = api.subscribeRealtime(uid, () => scheduleHydrate(uid));
+    };
+    const disconnect = () => {
+      rtCleanupRef.current?.();
+      rtCleanupRef.current = null;
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       const uid = data.session?.user.id ?? null;
       userIdRef.current = uid;
-      if (uid) hydrateFromServer(uid);
+      if (uid) connect(uid);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       const uid = session?.user.id ?? null;
       userIdRef.current = uid;
-      if (uid) hydrateFromServer(uid);
+      if (uid) connect(uid); else disconnect();
     });
-    return () => sub.subscription.unsubscribe();
+    return () => { sub.subscription.unsubscribe(); disconnect(); };
   }, [remote, hydrateFromServer]);
 
   // Each mutating action updates local state immediately (snappy UI + offline

@@ -176,6 +176,21 @@ export async function sendMessage(userId: string, threadId: string, text: string
     .update({ last_message: text, last_at: new Date().toISOString() }).eq('id', threadId);
 }
 
+// ---- realtime ---------------------------------------------------------------
+/**
+ * Subscribe to live changes relevant to this parent (booking status updates,
+ * chat, notifications). `onChange` fires on any change; the caller debounces and
+ * re-hydrates. Returns an unsubscribe function. RLS still applies.
+ */
+export function subscribeRealtime(userId: string, onChange: () => void): () => void {
+  const ch = supabase.channel(`parent-rt-${userId}`);
+  ch.on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `recipient_id=eq.${userId}` }, onChange);
+  ch.on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `parent_id=eq.${userId}` }, onChange);
+  ch.on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, onChange);
+  ch.subscribe();
+  return () => { supabase.removeChannel(ch); };
+}
+
 // ---- full hydration ---------------------------------------------------------
 export async function hydrateStore(userId: string): Promise<Partial<AppStore>> {
   const [user, children, favorites, bookings, notifications, threads] = await Promise.all([

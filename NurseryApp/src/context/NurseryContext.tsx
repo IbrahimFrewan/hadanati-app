@@ -38,6 +38,8 @@ export function NurseryProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const ownerIdRef = useRef<string | null>(null);
   const nurseryIdRef = useRef<string | null>(null);
+  const rtCleanupRef = useRef<(() => void) | null>(null);
+  const rtTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const remote = isSupabaseConfigured;
   const w = (e: unknown) => console.warn('[sync]', e);
 
@@ -71,20 +73,38 @@ export function NurseryProvider({ children }: { children: React.ReactNode }) {
     if (hydrated) saveLang(lang);
   }, [lang, hydrated]);
 
-  // Track the auth session and hydrate the store from the server on sign-in.
+  // Track the auth session, hydrate on sign-in, and open a Realtime channel so
+  // incoming requests, the attendance roster, chat and notifications stream in.
   useEffect(() => {
     if (!remote) return;
+
+    const scheduleHydrate = (uid: string) => {
+      if (rtTimerRef.current) clearTimeout(rtTimerRef.current);
+      rtTimerRef.current = setTimeout(() => hydrateFromServer(uid), 300);
+    };
+    const connect = async (uid: string) => {
+      await hydrateFromServer(uid); // resolves nurseryIdRef
+      rtCleanupRef.current?.();
+      rtCleanupRef.current = api.subscribeRealtime(
+        nurseryIdRef.current, uid, () => scheduleHydrate(uid),
+      );
+    };
+    const disconnect = () => {
+      rtCleanupRef.current?.();
+      rtCleanupRef.current = null;
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       const uid = data.session?.user.id ?? null;
       ownerIdRef.current = uid;
-      if (uid) hydrateFromServer(uid);
+      if (uid) connect(uid);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       const uid = session?.user.id ?? null;
       ownerIdRef.current = uid;
-      if (uid) hydrateFromServer(uid);
+      if (uid) connect(uid); else disconnect();
     });
-    return () => sub.subscription.unsubscribe();
+    return () => { sub.subscription.unsubscribe(); disconnect(); };
   }, [remote, hydrateFromServer]);
 
   const setLang = (l: string) => setLangState(l);

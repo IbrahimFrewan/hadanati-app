@@ -286,3 +286,25 @@ export async function fetchNurseryId(ownerId: string): Promise<string | null> {
   const n = await fetchNursery(ownerId);
   return n?.id ?? null;
 }
+
+/**
+ * Subscribe to live changes relevant to this nursery (incoming requests, the
+ * attendance roster, chat, and notifications). `onChange` fires on any change;
+ * the caller debounces and re-hydrates. Returns an unsubscribe function.
+ * RLS still applies, so only rows this user may read are delivered.
+ */
+export function subscribeRealtime(
+  nurseryId: string | null,
+  ownerId: string,
+  onChange: () => void,
+): () => void {
+  const ch = supabase.channel(`nursery-rt-${ownerId}`);
+  if (nurseryId) {
+    ch.on('postgres_changes', { event: '*', schema: 'public', table: 'booking_requests', filter: `nursery_id=eq.${nurseryId}` }, onChange);
+    ch.on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: `nursery_id=eq.${nurseryId}` }, onChange);
+  }
+  ch.on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `recipient_id=eq.${ownerId}` }, onChange);
+  ch.on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, onChange);
+  ch.subscribe();
+  return () => { supabase.removeChannel(ch); };
+}
