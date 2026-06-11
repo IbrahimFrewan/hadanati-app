@@ -14,8 +14,12 @@ function fmtTime(iso: string | null): string {
 
 // ---- auth -------------------------------------------------------------------
 export const auth = {
-  async sendOtp(phoneDigits: string) {
-    const { error } = await supabase.auth.signInWithOtp({ phone: E164(phoneDigits) });
+  // shouldCreate=false for login (reject unregistered numbers); true for sign-up.
+  async sendOtp(phoneDigits: string, shouldCreate = true) {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: E164(phoneDigits),
+      options: { shouldCreateUser: shouldCreate },
+    });
     if (error) throw error;
   },
   async verifyOtp(phoneDigits: string, token: string) {

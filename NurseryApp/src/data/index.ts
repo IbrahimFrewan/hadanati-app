@@ -1,5 +1,5 @@
 // Types
-export type RequestStatus = 'pending' | 'accepted' | 'declined';
+export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'expired';
 export type RosterStatus = 'in' | 'out' | 'absent';
 export type InvoiceStatus = 'paid' | 'pending' | 'overdue';
 export type PayoutStatus = 'paid' | 'accruing';

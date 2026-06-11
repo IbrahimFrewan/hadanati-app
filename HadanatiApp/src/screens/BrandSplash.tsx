@@ -28,7 +28,7 @@ function DotPattern() {
       );
     }
   }
-  return <View style={StyleSheet.absoluteFillObject} pointerEvents="none">{dots}</View>;
+  return <View style={StyleSheet.absoluteFill} pointerEvents="none">{dots}</View>;
 }
 
 export function BrandSplashScreen({ navigation }: any) {
@@ -57,7 +57,7 @@ export function BrandSplashScreen({ navigation }: any) {
     <View style={{ flex: 1, backgroundColor: GREEN, alignItems: 'center', justifyContent: 'center' }}>
       <StatusBar style="light" />
 
-      <Animated.View style={{ opacity: dotOpacity, ...StyleSheet.absoluteFillObject }}>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: dotOpacity }]}>
         <DotPattern />
       </Animated.View>
 

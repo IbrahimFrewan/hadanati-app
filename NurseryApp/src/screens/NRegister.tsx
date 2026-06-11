@@ -96,7 +96,12 @@ export function NRegister() {
             if (isSupabaseConfigured) {
               setBusy(true);
               try {
-                await actions.auth.signUp(form.email.trim(), form.password, form.owner.trim());
+                const { hasSession } = await actions.auth.signUp(form.email.trim(), form.password, form.owner.trim());
+                if (!hasSession) {
+                  // Email confirmation is required — can't create the nursery yet.
+                  setErr('Account created. Please confirm your email, then sign in to continue.');
+                  return;
+                }
                 await api.createNursery(form);
                 navigation.navigate('NKyc');
               } catch (e: any) {

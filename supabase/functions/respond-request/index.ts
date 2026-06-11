@@ -4,6 +4,7 @@
 //   decline -> refund the held payment
 import { corsHeaders, json } from "../_shared/cors.ts";
 import { adminClient, audit, getCaller } from "../_shared/auth.ts";
+import { notifyUser } from "../_shared/notify.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -32,13 +33,16 @@ Deno.serve(async (req) => {
   if (decision === "decline") {
     await db.from("booking_requests").update({ status: "declined" }).eq("id", requestId);
     await db.from("payments").update({ status: "refunded" }).eq("request_id", requestId);
-    await notify(db, r.parent_id, "booking", "Request declined",
-      "Your booking request was declined and refunded.");
+    await notifyUser(r.parent_id, {
+      kind: "booking", title: "Request declined",
+      body: "Your booking request was declined and refunded.", target: "bookings",
+    });
     await audit(caller.id, "decline_request", "booking_requests", requestId, {});
     return json({ ok: true, status: "declined" });
   }
 
-  // accept: capture payment + create booking
+  // accept: capture payment + create booking (+ invoice). Capacity is kept in
+  // sync automatically by the bookings trigger (sync_capacity).
   await db.from("booking_requests").update({ status: "accepted" }).eq("id", requestId);
   await db.from("payments").update({ status: "captured" }).eq("request_id", requestId);
 
@@ -50,12 +54,17 @@ Deno.serve(async (req) => {
   if (bErr) return json({ error: bErr.message }, 400);
 
   await db.from("payments").update({ booking_id: booking.id }).eq("request_id", requestId);
-  await notify(db, r.parent_id, "booking", "Request accepted",
-    "Great news — your booking was accepted!");
+
+  // Record a paid invoice for the captured payment.
+  await db.from("invoices").insert({
+    booking_id: booking.id, parent_id: r.parent_id, nursery_id: r.nursery_id,
+    amount: r.price, status: "paid", method: "card",
+  });
+
+  await notifyUser(r.parent_id, {
+    kind: "booking", title: "Request accepted",
+    body: "Great news — your booking was accepted!", target: "bookings",
+  });
   await audit(caller.id, "accept_request", "booking_requests", requestId, { bookingId: booking.id });
   return json({ ok: true, status: "accepted", bookingId: booking.id });
 });
-
-async function notify(db: any, recipientId: string, kind: string, title: string, body: string) {
-  await db.from("notifications").insert({ recipient_id: recipientId, kind, title, body });
-}

@@ -21,7 +21,7 @@ type Actions = {
   showToast: (msg: string) => void;
   clearData: () => void;
   auth: {
-    sendOtp: (phone: string) => Promise<void>;
+    sendOtp: (phone: string, shouldCreate?: boolean) => Promise<void>;
     verifyOtp: (phone: string, token: string) => Promise<void>;
     signOut: () => Promise<void>;
   };
@@ -207,7 +207,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (remote) api.auth.signOut().catch(w);
     },
     auth: {
-      sendOtp: (phone) => api.auth.sendOtp(phone),
+      sendOtp: (phone, shouldCreate = true) => api.auth.sendOtp(phone, shouldCreate),
       verifyOtp: async (phone, token) => { await api.auth.verifyOtp(phone, token); },
       signOut: () => api.auth.signOut(),
     },

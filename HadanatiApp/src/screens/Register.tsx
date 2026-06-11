@@ -45,7 +45,7 @@ export function RegisterScreen({ navigation }: any) {
 
     if (isSupabaseConfigured) {
       try {
-        await actions.auth.sendOtp(digits);
+        await actions.auth.sendOtp(digits, true);
         navigation.push('otp', { phone: digits, mode: 'register' });
       } catch (e: any) {
         setErr(e?.message ?? 'Could not send the verification code.');

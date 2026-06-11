@@ -24,7 +24,7 @@ interface NurseryContextType {
     submitKyc: () => Promise<void>;
     auth: {
       signIn: (email: string, password: string) => Promise<void>;
-      signUp: (email: string, password: string, fullName: string) => Promise<void>;
+      signUp: (email: string, password: string, fullName: string) => Promise<{ hasSession: boolean }>;
       signOut: () => Promise<void>;
     };
   };
@@ -164,7 +164,7 @@ export function NurseryProvider({ children }: { children: React.ReactNode }) {
     },
     auth: {
       signIn: async (email, password) => { await api.auth.signIn(email, password); },
-      signUp: async (email, password, fullName) => { await api.auth.signUp(email, password, fullName); },
+      signUp: (email, password, fullName) => api.auth.signUp(email, password, fullName),
       signOut: async () => {
         await api.auth.signOut();
         ownerIdRef.current = null; nurseryIdRef.current = null;

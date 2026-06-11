@@ -7,6 +7,7 @@
 // the intent so the lifecycle is complete and testable end-to-end.
 import { corsHeaders, json } from "../_shared/cors.ts";
 import { adminClient, audit, getCaller } from "../_shared/auth.ts";
+import { notifyUser } from "../_shared/notify.ts";
 
 const FEE_RATE = 0.05; // 5% platform take
 
@@ -31,7 +32,7 @@ Deno.serve(async (req) => {
 
   // Nursery must be approved & listed, and price is read from the server.
   const { data: nursery } = await db.from("nurseries")
-    .select("id, status, listed, price_hourly, price_daily, price_weekly, price_monthly")
+    .select("id, owner_id, status, listed, price_hourly, price_daily, price_weekly, price_monthly")
     .eq("id", nurseryId).single();
   if (!nursery || nursery.status !== "approved" || !nursery.listed) {
     return json({ error: "nursery not bookable" }, 400);
@@ -68,6 +69,15 @@ Deno.serve(async (req) => {
     amount, currency: "JOD", method: method ?? "card",
     status: "authorized", service_fee: serviceFee, net_amount: amount - serviceFee,
   });
+
+  // Notify the nursery owner of the incoming request.
+  if (nursery.owner_id) {
+    await notifyUser(nursery.owner_id, {
+      kind: "booking", title: "New booking request",
+      body: "A parent requested a booking — review it before it expires.",
+      target: "nRequests",
+    });
+  }
 
   await audit(caller.id, "create_request", "booking_requests", request.id, { nurseryId, type });
   return json({ ok: true, requestId: request.id, price: amount, unit: chosen.unit });

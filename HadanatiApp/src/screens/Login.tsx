@@ -26,10 +26,12 @@ export function LoginScreen({ navigation }: any) {
     if (isSupabaseConfigured) {
       setErr(''); setLoading(true);
       try {
-        await actions.auth.sendOtp(digits);
+        // Login must NOT create a new account for an unregistered number.
+        await actions.auth.sendOtp(digits, false);
         navigation.push('otp', { phone: digits, mode: 'login' });
-      } catch (e: any) {
-        setErr(e?.message ?? t(lang, 'phoneError'));
+      } catch {
+        // Supabase rejects unknown numbers when shouldCreateUser is false.
+        setErr(t(lang, 'phoneNotRegistered'));
       } finally {
         setLoading(false);
       }

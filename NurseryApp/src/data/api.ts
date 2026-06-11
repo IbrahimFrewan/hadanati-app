@@ -30,7 +30,8 @@ export const auth = {
       options: { data: { full_name: fullName, role: 'nursery_owner' } },
     });
     if (error) throw error;
-    return data.user;
+    // When email confirmation is enabled, no session is returned yet.
+    return { hasSession: Boolean(data.session), user: data.user };
   },
   async signOut() { await supabase.auth.signOut(); },
   async currentUserId(): Promise<string | null> {

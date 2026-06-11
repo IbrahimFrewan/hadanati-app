@@ -23,7 +23,7 @@ export function ConfirmScreen({ navigation }: any) {
       {/* Motif dots placeholder */}
       <View style={{ position: 'absolute', inset: 0, opacity: 0.07 }} />
       <SafeAreaView style={{ flex: 1 }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30, textAlign: 'center' }}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30 }}>
           <View style={{ width: 92, height: 92, borderRadius: 46, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
             <Icon name="check" size={50} color={C.green} />
           </View>

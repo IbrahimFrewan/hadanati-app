@@ -117,7 +117,7 @@ function ListRow({ n, onPress }: { n: typeof NURSERIES[0]; onPress: () => void }
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', gap: 8 }}>
           <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '600', color: C.ink, flex: 1, textAlign: isRTL ? 'right' : 'left' }} numberOfLines={1}>{n.name}</Text>
-          <Text style={{ fontFamily: F.displayBold, fontSize: 15, fontWeight: '800', color: C.dgreen, whiteSpace: 'nowrap' }}>{n.priceFrom}<Text style={{ fontSize: 10.5, color: C.mut, fontWeight: '600' }}> /{n.unit}</Text></Text>
+          <Text numberOfLines={1} style={{ fontFamily: F.displayBold, fontSize: 15, fontWeight: '800', color: C.dgreen }}>{n.priceFrom}<Text style={{ fontSize: 10.5, color: C.mut, fontWeight: '600' }}> /{n.unit}</Text></Text>
         </View>
         <Text style={{ fontSize: 12, color: C.mut, marginBottom: 7, textAlign: isRTL ? 'right' : 'left' }}>{n.district} · {n.tag.split(' · ')[0]}</Text>
         <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 9 }}>
