@@ -81,9 +81,10 @@ function CustomTabBar({ state, navigation, unread, msgs, lang }: any) {
   ];
   const badge: Record<string, number> = { notifications: unread, messages: msgs };
   const bottomPad = Math.max(insets.bottom, 8) + 10;
+  const isRTL = lang === 'ar';
 
   return (
-    <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.97)', borderTopWidth: 1, borderTopColor: C.line, paddingTop: 10, paddingBottom: bottomPad }}>
+    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: 'rgba(255,255,255,0.97)', borderTopWidth: 1, borderTopColor: C.line, paddingTop: 10, paddingBottom: bottomPad }}>
       {items.map((item, idx) => {
         const focused = state.index === idx;
         const b = badge[item.name] || 0;

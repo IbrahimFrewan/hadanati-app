@@ -76,10 +76,10 @@ export function ScheduleScreen({ navigation }: any) {
           <>
             <Text style={{ fontFamily: F.displayBold, fontSize: 17, color: C.ink, marginBottom: 12, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'selectDates')}</Text>
             <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 16, padding: 14 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <TouchableOpacity style={{ padding: 4 }}><Icon name="chevLeft" size={18} color={C.mut} /></TouchableOpacity>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <TouchableOpacity style={{ padding: 4 }}><Icon name={isRTL ? 'chevRight' : 'chevLeft'} size={18} color={C.mut} /></TouchableOpacity>
                 <Text style={{ fontFamily: F.displayBold, fontWeight: '700', fontSize: 15, color: C.ink }}>June 2026</Text>
-                <TouchableOpacity style={{ padding: 4 }}><Icon name="chevRight" size={18} color={C.mut} /></TouchableOpacity>
+                <TouchableOpacity style={{ padding: 4 }}><Icon name={isRTL ? 'chevLeft' : 'chevRight'} size={18} color={C.mut} /></TouchableOpacity>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {['S','M','T','W','T','F','S'].map((d, i) => <Text key={i} style={{ width: `${100/7}%`, textAlign: 'center', fontSize: 10.5, color: C.mut, fontWeight: '600', paddingVertical: 2 }}>{d}</Text>)}

@@ -15,6 +15,12 @@ import {
   Rubik_500Medium,
   Rubik_700Bold,
 } from '@expo-google-fonts/rubik';
+import {
+  Cairo_400Regular,
+  Cairo_500Medium,
+  Cairo_700Bold,
+  Cairo_800ExtraBold,
+} from '@expo-google-fonts/cairo';
 
 import { AppProvider } from './src/context/AppContext';
 import { RootNavigator } from './src/navigation';
@@ -28,6 +34,10 @@ export default function App() {
     Rubik_400Regular,
     Rubik_500Medium,
     Rubik_700Bold,
+    Cairo_400Regular,
+    Cairo_500Medium,
+    Cairo_700Bold,
+    Cairo_800ExtraBold,
   });
 
   if (!fontsLoaded) {

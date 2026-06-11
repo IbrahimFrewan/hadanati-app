@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, TextInput, Image,
   StyleSheet, ActivityIndicator, I18nManager,
 } from 'react-native';
-import { C, F } from '../theme';
+import { C, F, IS_RTL, row, textStart } from '../theme';
 import { Icon } from './Icon';
 import { useApp } from '../context/AppContext';
 
@@ -42,7 +42,7 @@ export function Button({
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
       style={[{
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+        flexDirection: row(), alignItems: 'center', justifyContent: 'center', gap: 8,
         width: full ? '100%' : undefined, borderRadius: 14, ...pads[size], ...skins[variant],
       }, style]}
     >
@@ -70,7 +70,7 @@ export function TopBar({
   const backIcon = isRTL ? 'chevRight' : 'chevLeft';
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12, zIndex: 2 }}>
+    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12, zIndex: 2 }}>
       {onBack ? (
         <TouchableOpacity onPress={onBack} style={{
           width: 40, height: 40, borderRadius: 999,
@@ -117,9 +117,9 @@ export function Field({
 }) {
   return (
     <View style={{ marginBottom: 16 }}>
-      {label && <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.ink, marginBottom: 7, fontFamily: F.bodyBold }}>{label}</Text>}
+      {label && <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.ink, marginBottom: 7, fontFamily: F.bodyBold, textAlign: textStart() }}>{label}</Text>}
       <View style={{
-        flexDirection: 'row', alignItems: 'center', gap: 9,
+        flexDirection: row(), alignItems: 'center', gap: 9,
         backgroundColor: '#fff', borderWidth: 1.5, borderColor: error ? C.danger : C.line,
         borderRadius: 14, paddingHorizontal: 14, height: 52,
       }}>
@@ -135,6 +135,7 @@ export function Field({
           keyboardType={keyboardType}
           autoFocus={autoFocus}
           onFocus={onFocus}
+          textAlign={textStart()}
           style={{ flex: 1, fontFamily: F.body, fontSize: 14.5, color: C.ink, padding: 0 }}
         />
         {suffix}
@@ -165,8 +166,8 @@ export function SectionTitle({ title, sub, action, onAction }: {
   title: string; sub?: string; action?: string; onAction?: () => void;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 13 }}>
-      <Text style={{ fontFamily: F.displayBold, fontSize: 19, fontWeight: '700', color: C.ink }}>{title}</Text>
+    <View style={{ flexDirection: row(), alignItems: 'center', justifyContent: 'space-between', marginBottom: 13 }}>
+      <Text style={{ fontFamily: F.displayBold, fontSize: 19, fontWeight: '700', color: C.ink, textAlign: textStart() }}>{title}</Text>
       {sub && !action && <Text style={{ fontSize: 11.5, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', color: C.green }}>{sub}</Text>}
       {action && <TouchableOpacity onPress={onAction}><Text style={{ fontFamily: F.body, color: C.green, fontSize: 12.5, fontWeight: '600' }}>{action}</Text></TouchableOpacity>}
     </View>
@@ -181,7 +182,7 @@ export function Pill({ children, active, onPress, icon }: {
     <TouchableOpacity
       onPress={onPress}
       style={{
-        flexDirection: 'row', alignItems: 'center', gap: 6,
+        flexDirection: row(), alignItems: 'center', gap: 6,
         paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999,
         borderWidth: active ? 1.5 : 1.5,
         borderColor: active ? C.green : C.line,
@@ -207,7 +208,7 @@ const STATUS_MAP: Record<string, { label: string; bg: string; fg: string }> = {
 export function StatusPill({ status, label }: { status: string; label?: string }) {
   const s = STATUS_MAP[status] || STATUS_MAP.pending;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: s.bg }}>
+    <View style={{ flexDirection: row(), alignItems: 'center', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: s.bg }}>
       <Text style={{ fontFamily: F.bodyBold, fontSize: 11, fontWeight: '700', color: s.fg }}>{label || status}</Text>
     </View>
   );
@@ -216,7 +217,7 @@ export function StatusPill({ status, label }: { status: string; label?: string }
 // ---- Stepper ------------------------------------------------------
 export function Stepper({ step, total }: { step: number; total: number }) {
   return (
-    <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center', paddingVertical: 6, paddingBottom: 10 }}>
+    <View style={{ flexDirection: row(), gap: 6, justifyContent: 'center', paddingVertical: 6, paddingBottom: 10 }}>
       {Array.from({ length: total }).map((_, i) => (
         <View key={i} style={{
           height: 5, borderRadius: 999, width: i === step ? 22 : 5,
@@ -253,7 +254,7 @@ const AVAIL: Record<string, { label: string; bg: string; fg: string; dot: string
 export function AvailBadge({ avail, label }: { avail: string; label?: string }) {
   const a = AVAIL[avail] || AVAIL.available;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: a.bg, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999 }}>
+    <View style={{ flexDirection: row(), alignItems: 'center', gap: 5, backgroundColor: a.bg, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999 }}>
       <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: a.dot }} />
       <Text style={{ fontFamily: F.bodyBold, fontSize: 11, fontWeight: '600', color: a.fg }}>{label || avail}</Text>
     </View>
@@ -263,7 +264,7 @@ export function AvailBadge({ avail, label }: { avail: string; label?: string }) 
 // ---- Rating -------------------------------------------------------
 export function Rating({ value, count, size = 13 }: { value: number | string; count?: number; size?: number }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+    <View style={{ flexDirection: row(), alignItems: 'center', gap: 4 }}>
       <Icon name="star" size={size + 1} color={C.amber} fill={C.amber} />
       <Text style={{ fontFamily: F.bodyBold, fontSize: size, fontWeight: '600', color: C.ink }}>{value}</Text>
       {count != null && <Text style={{ fontSize: size, color: C.mut, fontWeight: '500' }}>({count})</Text>}
@@ -274,7 +275,7 @@ export function Rating({ value, count, size = 13 }: { value: number | string; co
 // ---- Verified -----------------------------------------------------
 export function Verified({ size = 13, label = 'Verified' }: { size?: number; label?: string }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+    <View style={{ flexDirection: row(), alignItems: 'center', gap: 4 }}>
       <Icon name="shield" size={size + 3} color={C.green} />
       <Text style={{ fontFamily: F.bodyBold, fontSize: size, fontWeight: '600', color: C.green }}>{label}</Text>
     </View>

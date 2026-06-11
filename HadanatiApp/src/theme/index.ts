@@ -14,7 +14,8 @@ export const C = {
   tint: '#dfeae0',
 };
 
-export const F = {
+// Latin fonts (English UI) and Arabic fonts (Cairo covers Arabic + Latin).
+const LATIN_FONTS = {
   display: 'Baloo2_700Bold',
   displayMedium: 'Baloo2_500Medium',
   displayBold: 'Baloo2_700Bold',
@@ -23,3 +24,33 @@ export const F = {
   bodyMedium: 'Rubik_500Medium',
   bodyBold: 'Rubik_700Bold',
 };
+
+const ARABIC_FONTS = {
+  display: 'Cairo_700Bold',
+  displayMedium: 'Cairo_500Medium',
+  displayBold: 'Cairo_700Bold',
+  displayExtraBold: 'Cairo_800ExtraBold',
+  body: 'Cairo_400Regular',
+  bodyMedium: 'Cairo_500Medium',
+  bodyBold: 'Cairo_700Bold',
+};
+
+// `F` is a live object: every screen reads `F.bodyBold` etc. in inline styles,
+// which re-evaluate each render. `setLangFonts` is called from AppProvider during
+// render so that when the language flips, the whole tree paints with the right
+// font family (Cairo for Arabic, Baloo2/Rubik for English) without per-usage edits.
+export const F = { ...LATIN_FONTS };
+
+// Live RTL flag (ES module live binding). Set from AppProvider during render.
+// Shared presentational components read this to flip their internal row order
+// and text alignment without each needing to subscribe to context.
+export let IS_RTL = false;
+
+export function setLangFonts(lang: 'en' | 'ar') {
+  Object.assign(F, lang === 'ar' ? ARABIC_FONTS : LATIN_FONTS);
+  IS_RTL = lang === 'ar';
+}
+
+// Convenience helpers for inline styles.
+export const row = (): 'row' | 'row-reverse' => (IS_RTL ? 'row-reverse' : 'row');
+export const textStart = (): 'left' | 'right' => (IS_RTL ? 'right' : 'left');

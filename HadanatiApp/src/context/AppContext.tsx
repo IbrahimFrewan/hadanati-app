@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useRef, useCallback, useEff
 import { Animated, Text, View, Platform, ToastAndroid } from 'react-native';
 import { AppStore, seedStore, Booking, Child } from '../data';
 import { loadStore, saveStore, loadLang, saveLang, clearStore } from '../data/storage';
+import { setLangFonts } from '../theme';
 import { Lang } from '../i18n';
 
 type Actions = {
@@ -71,6 +72,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>('en');
   const [hydrated, setHydrated] = useState(false);
   const toastRef = useRef<((m: string) => void) | null>(null);
+
+  // Select the font family for the active language during render, so the whole
+  // tree (which reads F.* in inline styles) paints with Cairo for Arabic.
+  setLangFonts(lang);
 
   // Load saved data from the device on first mount.
   useEffect(() => {
