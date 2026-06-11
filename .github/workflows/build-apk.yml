@@ -60,7 +60,14 @@ jobs:
         working-directory: ${{ matrix.app }}/android
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          if ! ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee /tmp/gradle.log; then
+            echo "----- gradle failed; tail -----"
+            tail -n 150 /tmp/gradle.log
+            # Surface the key error lines as an annotation (readable via API).
+            msg=$(grep -nE "FAILURE:|What went wrong|Caused by:|error:|Execution failed|A problem occurred|SDK location|Could not (find|resolve|determine|create)|Failed to|not found|NDK|aapt2|OutOfMemory|compileSdk|minSdk|targetSdk" /tmp/gradle.log | tail -n 30 | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Gradle ${{ matrix.app }}::${msg}"
+            exit 1
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
