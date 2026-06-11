@@ -89,8 +89,8 @@ export function ChildrenScreen({ navigation }: any) {
                     <AvatarImage seed={ch.id} size={58} uri={ch.photoUri || undefined} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 2 }}>{ch.name}</Text>
-                    <Text style={{ fontSize: 12.5, color: C.mut }}>{ageStr(ch.dob)} · {AGE_LABELS[ch.ageGroup]?.split(' · ')[0] || ch.ageGroup}</Text>
+                    <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 2, textAlign: isRTL ? 'right' : 'left' }}>{ch.name}</Text>
+                    <Text style={{ fontSize: 12.5, color: C.mut, textAlign: isRTL ? 'right' : 'left' }}>{ageStr(ch.dob)} · {AGE_LABELS[ch.ageGroup]?.split(' · ')[0] || ch.ageGroup}</Text>
                   </View>
                   <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="edit" size={17} color={C.mut} />
@@ -99,7 +99,7 @@ export function ChildrenScreen({ navigation }: any) {
                 {ch.allergies ? (
                   <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, marginTop: 12, backgroundColor: '#fbeede', borderRadius: 10, padding: 9 }}>
                     <Icon name="alert" size={16} color="#b06d22" />
-                    <Text style={{ fontSize: 12, color: '#8a5a16', fontWeight: '600', fontFamily: F.bodyBold }}>{t(lang, 'allergiesLabel')}{ch.allergies}</Text>
+                    <Text style={{ fontSize: 12, color: '#8a5a16', fontWeight: '600', fontFamily: F.bodyBold, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'allergiesLabel')}{ch.allergies}</Text>
                   </View>
                 ) : null}
                 <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 9, marginTop: 12 }}>
@@ -118,7 +118,7 @@ export function ChildrenScreen({ navigation }: any) {
           <View style={{ flex: 1 }} />
           <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, paddingHorizontal: 20, paddingTop: 14, paddingBottom: Math.max(insets.bottom, 16) + 8 }}>
             <View style={{ width: 40, height: 4, borderRadius: 999, backgroundColor: '#e7e2d6', alignSelf: 'center', marginBottom: 14 }} />
-            <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 16 }}>{t(lang, 'addAChild')}</Text>
+            <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 16, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'addAChild')}</Text>
             {form && (
               <>
                 {/* Photo picker */}
@@ -133,7 +133,7 @@ export function ChildrenScreen({ navigation }: any) {
                         </View>
                       )}
                     </View>
-                    <View style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: C.header, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' }}>
+                    <View style={{ position: 'absolute', bottom: 0, [isRTL ? 'left' : 'right']: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: C.header, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' }}>
                       <Icon name="camera" size={14} color="#fff" />
                     </View>
                   </TouchableOpacity>
@@ -143,16 +143,16 @@ export function ChildrenScreen({ navigation }: any) {
 
                 {/* Date picker field */}
                 <View style={{ marginBottom: 16 }}>
-                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.ink, marginBottom: 7, fontFamily: F.bodyBold }}>{t(lang, 'dateOfBirth')}</Text>
+                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.ink, marginBottom: 7, fontFamily: F.bodyBold, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'dateOfBirth')}</Text>
                   <TouchableOpacity
                     onPress={() => {
                       if (form.dob) setPickerDate(new Date(form.dob));
                       setShowPicker(true);
                     }}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: '#fff', borderWidth: 1.5, borderColor: C.line, borderRadius: 14, paddingHorizontal: 14, height: 52 }}
+                    style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 9, backgroundColor: '#fff', borderWidth: 1.5, borderColor: C.line, borderRadius: 14, paddingHorizontal: 14, height: 52 }}
                   >
                     <Icon name="calendar" size={19} color={C.mut} />
-                    <Text style={{ flex: 1, fontFamily: F.body, fontSize: 14.5, color: form.dob ? C.ink : C.mut }}>
+                    <Text style={{ flex: 1, fontFamily: F.body, fontSize: 14.5, color: form.dob ? C.ink : C.mut, textAlign: isRTL ? 'right' : 'left' }}>
                       {form.dob || 'Select date of birth'}
                     </Text>
                     {form.dob && (
@@ -161,7 +161,7 @@ export function ChildrenScreen({ navigation }: any) {
                       </Text>
                     )}
                   </TouchableOpacity>
-                  <Text style={{ fontSize: 11.5, color: C.mut, marginTop: 6 }}>{t(lang, 'dobHint')}</Text>
+                  <Text style={{ fontSize: 11.5, color: C.mut, marginTop: 6, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'dobHint')}</Text>
                 </View>
 
                 {showPicker && (
@@ -187,9 +187,9 @@ export function ChildrenScreen({ navigation }: any) {
                 )}
 
                 <Field label={t(lang, 'allergies')} icon="alert" placeholder={t(lang, 'allergiesPlaceholder')} value={form.allergies} onChangeText={v => setForm({ ...form, allergies: v })} />
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 7, marginBottom: 16 }}>
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 7, marginBottom: 16 }}>
                   <Icon name="lock" size={14} color={C.mut} />
-                  <Text style={{ fontSize: 11, color: C.mut, lineHeight: 17, flex: 1 }}>{t(lang, 'medicalNote')}</Text>
+                  <Text style={{ fontSize: 11, color: C.mut, lineHeight: 17, flex: 1, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'medicalNote')}</Text>
                 </View>
                 <Button full size="lg" disabled={!form.name.trim() || !form.dob} onPress={save}>{t(lang, 'saveChild')}</Button>
               </>

@@ -9,14 +9,16 @@ import { getNursery } from '../data';
 import { t } from '../i18n';
 
 function Faq({ q, a }: { q: string; a: string }) {
+  const { lang } = useApp();
+  const isRTL = lang === 'ar';
   const [open, setOpen] = useState(false);
   return (
     <View style={{ borderBottomWidth: 1, borderBottomColor: C.line }}>
-      <TouchableOpacity onPress={() => setOpen(!open)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14 }}>
-        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', fontFamily: F.bodyBold, color: C.ink }}>{q}</Text>
+      <TouchableOpacity onPress={() => setOpen(!open)} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10, paddingVertical: 14 }}>
+        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', fontFamily: F.bodyBold, color: C.ink, textAlign: isRTL ? 'right' : 'left' }}>{q}</Text>
         <Icon name={open ? 'chevUp' : 'chevDown'} size={18} color={C.mut} />
       </TouchableOpacity>
-      {open && <Text style={{ fontSize: 12.5, color: C.mut, lineHeight: 22, paddingBottom: 14 }}>{a}</Text>}
+      {open && <Text style={{ fontSize: 12.5, color: C.mut, lineHeight: 22, paddingBottom: 14, textAlign: isRTL ? 'right' : 'left' }}>{a}</Text>}
     </View>
   );
 }

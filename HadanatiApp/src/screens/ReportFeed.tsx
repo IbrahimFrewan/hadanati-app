@@ -77,7 +77,7 @@ export function ReportFeedScreen({ navigation, route }: any) {
             >
               {/* Unread dot */}
               {r.unread && (
-                <View style={{ position: 'absolute', top: 14, right: 14, width: 9, height: 9, borderRadius: 999, backgroundColor: C.danger, zIndex: 2 }} />
+                <View style={{ position: 'absolute', top: 14, [isRTL ? 'left' : 'right']: 14, width: 9, height: 9, borderRadius: 999, backgroundColor: C.danger, zIndex: 2 }} />
               )}
 
               <View style={{ padding: 14, paddingBottom: 11 }}>
@@ -87,7 +87,7 @@ export function ReportFeedScreen({ navigation, route }: any) {
                     <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 1, textAlign: isRTL ? 'right' : 'left' }}>{r.date}</Text>
                     <Text style={{ fontSize: 11.5, color: C.mut, textAlign: isRTL ? 'right' : 'left' }}>{n?.name || ''}</Text>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: m.bg, paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, marginLeft: r.unread ? 18 : 0 }}>
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 5, backgroundColor: m.bg, paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, marginLeft: r.unread ? 18 : 0 }}>
                     <Icon name="smile" size={14} color={m.c} />
                     <Text style={{ fontSize: 12, fontWeight: '700', color: m.c, fontFamily: F.bodyBold }}>{moodLabel}</Text>
                   </View>

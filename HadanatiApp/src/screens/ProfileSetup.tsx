@@ -8,6 +8,7 @@ import { t } from '../i18n';
 
 export function ProfileSetupScreen({ navigation }: any) {
   const { store, lang, actions } = useApp();
+  const isRTL = lang === 'ar';
   const [email, setEmail] = useState('');
 
   const save = () => {
@@ -20,8 +21,8 @@ export function ProfileSetupScreen({ navigation }: any) {
       <TopBar title={t(lang, 'yourProfile')} onBack={() => navigation.goBack()} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24 }}>
         <View style={{ marginBottom: 28 }}>
-          <Text style={{ fontFamily: F.displayBold, fontSize: 26, fontWeight: '700', color: '#1c2b1e', marginBottom: 8, textAlign: lang === 'ar' ? 'right' : 'left' }}>{t(lang, 'niceToMeetYou')}</Text>
-          <Text style={{ fontSize: 13.5, color: '#7a8c7d', lineHeight: 20, textAlign: lang === 'ar' ? 'right' : 'left' }}>{t(lang, 'profileSubtitle')}</Text>
+          <Text style={{ fontFamily: F.displayBold, fontSize: 26, fontWeight: '700', color: '#1c2b1e', marginBottom: 8, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'niceToMeetYou')}</Text>
+          <Text style={{ fontSize: 13.5, color: '#7a8c7d', lineHeight: 20, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'profileSubtitle')}</Text>
         </View>
         <Field
           label={t(lang, 'email')}

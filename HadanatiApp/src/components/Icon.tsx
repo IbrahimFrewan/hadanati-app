@@ -4,7 +4,7 @@ import Svg, { Path, Circle, Rect, Ellipse, G, Line, Text as SvgText } from 'reac
 type IconName =
   | 'pin' | 'search' | 'sliders' | 'chevDown' | 'chevUp' | 'chevRight' | 'chevLeft'
   | 'x' | 'clock' | 'heart' | 'star' | 'home' | 'calendar' | 'chat' | 'bell' | 'user'
-  | 'arrowRight' | 'check' | 'leaf' | 'sparkle' | 'crosshair' | 'refresh' | 'mapAlt'
+  | 'arrowRight' | 'arrowLeft' | 'check' | 'leaf' | 'sparkle' | 'crosshair' | 'refresh' | 'mapAlt'
   | 'bookmark' | 'plus' | 'minus' | 'send' | 'paperclip' | 'camera' | 'edit' | 'trash'
   | 'settings' | 'logout' | 'globe' | 'shield' | 'info' | 'phone' | 'mail' | 'lock'
   | 'qr' | 'creditCard' | 'tag' | 'alert' | 'checkCircle' | 'dots' | 'eye' | 'download'
@@ -43,6 +43,7 @@ export function Icon({ name, size = 22, color = 'currentColor', fill = 'none', s
     case 'bell': return <Svg {...props}><Path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><Path d="M10 20a2 2 0 0 0 4 0" /></Svg>;
     case 'user': return <Svg {...props}><Circle cx="12" cy="8" r="4" /><Path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></Svg>;
     case 'arrowRight': return <Svg {...props}><Path d="M5 12h14M13 6l6 6-6 6" /></Svg>;
+    case 'arrowLeft': return <Svg {...props}><Path d="M19 12H5M11 6l-6 6 6 6" /></Svg>;
     case 'check': return <Svg {...props}><Path d="m5 12.5 4.5 4.5L19 6.5" /></Svg>;
     case 'leaf': return <Svg {...props}><Path d="M5 19c0-8 6-13 14-14 1 9-4 15-14 14Zm0 0c4-4 6.5-6 9-7.5" /></Svg>;
     case 'sparkle': return <Svg {...props}><Path d="M12 3v6M12 15v6M3 12h6M15 12h6M6.5 6.5l3 3M14.5 14.5l3 3M17.5 6.5l-3 3M9.5 14.5l-3 3" /></Svg>;

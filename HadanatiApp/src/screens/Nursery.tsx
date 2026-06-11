@@ -95,7 +95,7 @@ function GalleryHeader({ n, navigation, isRTL }: { n: typeof NURSERIES[0]; navig
       </SafeAreaView>
 
       {/* Photo / video pill */}
-      <View style={{ position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', gap: 6 }}>
+      <View style={{ position: 'absolute', bottom: 12, [isRTL ? 'left' : 'right']: 12, flexDirection: isRTL ? 'row-reverse' : 'row', gap: 6 }}>
         <TouchableOpacity onPress={() => { flatRef.current?.scrollToIndex({ index: 0, animated: true }); setIdx(0); }}
           style={{ backgroundColor: idx === 0 ? '#fff' : 'rgba(28,51,36,0.8)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 9 }}>
           <Text style={{ color: idx === 0 ? C.dgreen : '#fff', fontSize: 11, fontWeight: '700' }}>Photos</Text>
@@ -112,10 +112,12 @@ function GalleryHeader({ n, navigation, isRTL }: { n: typeof NURSERIES[0]; navig
 }
 
 function Section({ title, children, action, onAction }: { title: string; children: React.ReactNode; action?: string; onAction?: () => void }) {
+  const { lang } = useApp();
+  const isRTL = lang === 'ar';
   return (
     <View style={{ paddingVertical: 20, paddingHorizontal: 22, borderTopWidth: 8, borderTopColor: C.cream }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 13 }}>
-        <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink }}>{title}</Text>
+      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 13 }}>
+        <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, textAlign: isRTL ? 'right' : 'left' }}>{title}</Text>
         {action && <TouchableOpacity onPress={onAction}><Text style={{ fontFamily: F.body, color: C.green, fontWeight: '600', fontSize: 12.5 }}>{action}</Text></TouchableOpacity>}
       </View>
       {children}
@@ -126,16 +128,17 @@ function Section({ title, children, action, onAction }: { title: string; childre
 function Policy({ icon, title, body }: { icon: string; title: string; body: string }) {
   const [open, setOpen] = useState(false);
   const { lang } = useApp();
+  const isRTL = lang === 'ar';
   return (
     <View style={{ borderBottomWidth: 1, borderBottomColor: C.line }}>
-      <TouchableOpacity onPress={() => setOpen(!open)} style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 13 }}>
+      <TouchableOpacity onPress={() => setOpen(!open)} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 11, paddingVertical: 13 }}>
         <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Icon name={icon as any} size={18} color={C.dgreen} />
         </View>
-        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: C.ink, fontFamily: F.bodyBold, textAlign: lang === 'ar' ? 'right' : 'left' }}>{title}</Text>
+        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: C.ink, fontFamily: F.bodyBold, textAlign: isRTL ? 'right' : 'left' }}>{title}</Text>
         <Icon name={open ? 'chevUp' : 'chevDown'} size={18} color={C.mut} />
       </TouchableOpacity>
-      {open && <Text style={{ fontSize: 12.5, color: C.mut, lineHeight: 20, marginBottom: 14, marginLeft: 45, textAlign: lang === 'ar' ? 'right' : 'left' }}>{body}</Text>}
+      {open && <Text style={{ fontSize: 12.5, color: C.mut, lineHeight: 20, marginBottom: 14, [isRTL ? 'marginRight' : 'marginLeft']: 45, textAlign: isRTL ? 'right' : 'left' }}>{body}</Text>}
     </View>
   );
 }
@@ -178,7 +181,7 @@ export function NurseryScreen({ navigation, route }: any) {
           <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
             <Rating value={n.rating} count={n.reviews} size={13} />
             <Verified label={t(lang, 'verified')} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4 }}>
               <Icon name="pin" size={14} color={C.mut} />
               <Text style={{ fontSize: 12.5, color: C.mut }}>{n.district}</Text>
             </View>
@@ -215,9 +218,9 @@ export function NurseryScreen({ navigation, route }: any) {
         </Section>
 
         <Section title={t(lang, 'servicesTitle')}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9 }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 9 }}>
             {[['meal', 'Meals included'], ['users', 'Small groups'], ['shield', 'CCTV & secure'], ['smile', 'Outdoor garden'], ['globe', 'Bilingual'], ['calendar', 'Transport']].map(([ic, l]) => (
-              <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 13 }}>
+              <View key={l} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 7, backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 13 }}>
                 <Icon name={ic as any} size={15} color={C.dgreen} />
                 <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.ink, fontFamily: F.bodyBold }}>{l}</Text>
               </View>
@@ -244,7 +247,7 @@ export function NurseryScreen({ navigation, route }: any) {
               scrollEnabled={false}
               originWhitelist={['*']}
             />
-            <View style={{ position: 'absolute', bottom: 10, left: 10, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 999, paddingVertical: 5, paddingHorizontal: 11, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <View style={{ position: 'absolute', bottom: 10, [isRTL ? 'right' : 'left']: 10, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 999, paddingVertical: 5, paddingHorizontal: 11, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 5 }}>
               <Icon name="info" size={13} color={C.mut} />
               <Text style={{ fontSize: 11, fontWeight: '600', color: C.mut }}>{t(lang, 'exactAddressAfterBooking')}</Text>
             </View>

@@ -50,7 +50,7 @@ export function MessagesScreen({ navigation }: any) {
             }
             renderItem={({ item: msg }) => (
               <View style={{ maxWidth: '78%', alignSelf: msg.me ? 'flex-end' : 'flex-start', backgroundColor: msg.me ? C.header : '#fff', borderWidth: msg.me ? 0 : 1, borderColor: C.line, borderRadius: 16, borderBottomRightRadius: msg.me ? 5 : 16, borderBottomLeftRadius: msg.me ? 16 : 5, padding: 13 }}>
-                <Text style={{ fontSize: 13.5, lineHeight: 20, color: msg.me ? '#fff' : C.ink }}>{msg.text}</Text>
+                <Text style={{ fontSize: 13.5, lineHeight: 20, color: msg.me ? '#fff' : C.ink, textAlign: isRTL ? 'right' : 'left' }}>{msg.text}</Text>
                 <Text style={{ fontSize: 9.5, opacity: 0.6, textAlign: 'right', marginTop: 4, color: msg.me ? '#fff' : C.mut }}>{msg.time}</Text>
               </View>
             )}
@@ -95,7 +95,7 @@ export function MessagesScreen({ navigation }: any) {
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontFamily: F.displayBold, fontSize: 15.5, fontWeight: '700', color: C.ink }}>{n?.name || ''}</Text>
+                  <Text style={{ fontFamily: F.displayBold, fontSize: 15.5, fontWeight: '700', color: C.ink, textAlign: isRTL ? 'right' : 'left' }}>{n?.name || ''}</Text>
                   <Text style={{ fontSize: 11, color: C.mut }}>{tt.time}</Text>
                 </View>
                 <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 3 }}>

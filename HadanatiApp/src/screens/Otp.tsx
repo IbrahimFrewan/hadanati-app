@@ -9,6 +9,7 @@ import { t } from '../i18n';
 
 export function OtpScreen({ navigation, route }: any) {
   const { lang } = useApp();
+  const isRTL = lang === 'ar';
   const phone = route.params?.phone || '7 9123 4567';
   const mode = route.params?.mode || 'register';
   const masked = '+962 ' + String(phone).slice(0, 1) + ' •••• ' + String(phone).slice(-2);
@@ -71,12 +72,12 @@ export function OtpScreen({ navigation, route }: any) {
         </View>
 
         {verifying ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 7 }}>
             <Icon name="checkCircle" size={17} color={C.green} />
-            <Text style={{ fontSize: 13, color: C.green, fontWeight: '600' }}>{t(lang, 'verifying')}</Text>
+            <Text style={{ fontSize: 13, color: C.green, fontWeight: '600', textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'verifying')}</Text>
           </View>
         ) : (
-          <Text style={{ fontSize: 13, color: C.mut }}>
+          <Text style={{ fontSize: 13, color: C.mut, textAlign: isRTL ? 'right' : 'left' }}>
             {timer > 0 ? (
               <>{t(lang, 'resendIn')}<Text style={{ fontWeight: '700', color: C.ink }}>0:{String(timer).padStart(2, '0')}</Text></>
             ) : (
@@ -85,9 +86,9 @@ export function OtpScreen({ navigation, route }: any) {
           </Text>
         )}
 
-        <View style={{ marginTop: 22, flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: C.cream, borderRadius: 12, padding: 13 }}>
+        <View style={{ marginTop: 22, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 9, backgroundColor: C.cream, borderRadius: 12, padding: 13 }}>
           <Icon name="info" size={17} color={C.mut} />
-          <Text style={{ fontSize: 11.5, color: C.mut, flex: 1 }}>{t(lang, 'demoHint')}</Text>
+          <Text style={{ fontSize: 11.5, color: C.mut, flex: 1, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'demoHint')}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

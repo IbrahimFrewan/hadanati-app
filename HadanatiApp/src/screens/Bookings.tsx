@@ -87,10 +87,10 @@ export function BookingsScreen({ navigation }: any) {
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', gap: 8 }}>
-                    <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, flex: 1 }} numberOfLines={1}>{n.name}</Text>
+                    <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, flex: 1, textAlign: isRTL ? 'right' : 'left' }} numberOfLines={1}>{n.name}</Text>
                     <StatusPill status={b.status} label={STATUS_LABELS[b.status]} />
                   </View>
-                  <Text style={{ fontSize: 12, color: C.mut, marginBottom: 5 }}>{PLAN_LABEL[b.type]} · {childNames(b)}</Text>
+                  <Text style={{ fontSize: 12, color: C.mut, marginBottom: 5, textAlign: isRTL ? 'right' : 'left' }}>{PLAN_LABEL[b.type]} · {childNames(b)}</Text>
                   <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 5 }}>
                     <Icon name="calendar" size={13} color={C.dgreen} />
                     <Text style={{ fontSize: 12, color: C.ink, fontWeight: '600', fontFamily: F.bodyBold }}>{b.dates}</Text>
@@ -144,15 +144,15 @@ export function BookingsScreen({ navigation }: any) {
           <View style={{ flex: 1 }} />
           <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, paddingTop: 14, paddingBottom: Math.max(insets.bottom, 20) }} onPress={e => e.stopPropagation()}>
             <View style={{ width: 40, height: 4, borderRadius: 999, backgroundColor: '#e7e2d6', alignSelf: 'center', marginBottom: 14 }} />
-            <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 16 }}>{t(lang, 'cancelBooking')}</Text>
+            <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 16, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'cancelBooking')}</Text>
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10, backgroundColor: '#e4f1e6', borderRadius: 12, padding: 13, marginBottom: 16 }}>
               <Icon name="checkCircle" size={20} color="#2f7a44" />
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#2f7a44', fontFamily: F.bodyBold }}>{t(lang, 'fullRefund')}{cancelTarget.price} JD</Text>
-                <Text style={{ fontSize: 11.5, color: '#3d7a4f' }}>{t(lang, 'cancelEarly')}</Text>
+                <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#2f7a44', fontFamily: F.bodyBold, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'fullRefund')}{cancelTarget.price} JD</Text>
+                <Text style={{ fontSize: 11.5, color: '#3d7a4f', textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'cancelEarly')}</Text>
               </View>
             </View>
-            <Text style={{ fontSize: 13, color: C.mut, lineHeight: 20, marginBottom: 18 }}>
+            <Text style={{ fontSize: 13, color: C.mut, lineHeight: 20, marginBottom: 18, textAlign: isRTL ? 'right' : 'left' }}>
               {t(lang, 'cancelInfo')}{cancelTarget.n.name}{t(lang, 'cancelInfo2')}
             </Text>
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 11 }}>

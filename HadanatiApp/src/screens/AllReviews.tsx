@@ -34,7 +34,7 @@ export function AllReviewsScreen({ navigation, route }: any) {
             <NurseryImage src={n.img} seed={n.id} radius={10} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: F.displayBold, fontSize: 15, fontWeight: '700', color: C.ink }}>{n.name}</Text>
+            <Text style={{ fontFamily: F.displayBold, fontSize: 15, fontWeight: '700', color: C.ink, textAlign: isRTL ? 'right' : 'left' }}>{n.name}</Text>
             <Rating value={n.rating} count={n.reviews} size={12} />
           </View>
         </View>
@@ -50,7 +50,7 @@ export function AllReviewsScreen({ navigation, route }: any) {
                 <Text style={{ fontFamily: F.displayBold, fontWeight: '700', fontSize: 14, color: C.dgreen }}>{r.name[0]}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13.5, fontWeight: '600', color: C.ink, fontFamily: F.bodyBold }}>{r.name}</Text>
+                <Text style={{ fontSize: 13.5, fontWeight: '600', color: C.ink, fontFamily: F.bodyBold, textAlign: isRTL ? 'right' : 'left' }}>{r.name}</Text>
                 <Text style={{ fontSize: 11, color: C.mut }}>{r.date} · <Text style={{ color: C.green, fontWeight: '600' }}>{t(lang, 'verifiedBooking')}</Text></Text>
               </View>
               <View style={{ flexDirection: 'row', gap: 1 }}>

@@ -36,6 +36,13 @@ export function Button({
     primary: '#fff', secondary: C.dgreen, ghost: C.dgreen, outline: C.dgreen, danger: C.danger,
   };
   const iconSize = size === 'lg' ? 20 : 18;
+  // Directional icons must point the other way in RTL (the icon's *position*
+  // is already mirrored by row-reverse; this flips the glyph itself).
+  const dir = (n?: string) => {
+    if (!IS_RTL || !n) return n;
+    const map: Record<string, string> = { arrowRight: 'arrowLeft', arrowLeft: 'arrowRight', chevRight: 'chevLeft', chevLeft: 'chevRight' };
+    return map[n] ?? n;
+  };
 
   return (
     <TouchableOpacity
@@ -46,11 +53,11 @@ export function Button({
         width: full ? '100%' : undefined, borderRadius: 14, ...pads[size], ...skins[variant],
       }, style]}
     >
-      {icon && <Icon name={icon as any} size={iconSize} color={textColors[variant]} />}
+      {icon && <Icon name={dir(icon) as any} size={iconSize} color={textColors[variant]} />}
       <Text style={{ fontFamily: F.bodyBold, fontSize: fonts[size], color: textColors[variant], fontWeight: '700' }}>
         {children}
       </Text>
-      {iconRight && <Icon name={iconRight as any} size={iconSize} color={textColors[variant]} />}
+      {iconRight && <Icon name={dir(iconRight) as any} size={iconSize} color={textColors[variant]} />}
     </TouchableOpacity>
   );
 }

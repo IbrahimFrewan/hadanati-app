@@ -20,6 +20,7 @@ function FavBtn({ id }: { id: string }) {
 
 function ResultCard({ n, onPress }: { n: typeof NURSERIES[0]; onPress: () => void }) {
   const { lang } = useApp();
+  const isRTL = lang === 'ar';
   const AGE_LABEL: Record<string, string> = { infant: t(lang, 'infant'), toddler: t(lang, 'toddler'), preschool: t(lang, 'preschool') };
   return (
     <TouchableOpacity onPress={onPress} style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 18, overflow: 'hidden', flexShrink: 0 }}>
@@ -28,18 +29,18 @@ function ResultCard({ n, onPress }: { n: typeof NURSERIES[0]; onPress: () => voi
           <NurseryImage src={n.img} seed={n.id} radius={14} />
         </View>
         {n.sponsored && (
-          <View style={{ position: 'absolute', top: 17, left: 17, backgroundColor: C.amber, borderRadius: 6, paddingVertical: 4, paddingHorizontal: 9 }}>
+          <View style={{ position: 'absolute', top: 17, [isRTL ? 'right' : 'left']: 17, backgroundColor: C.amber, borderRadius: 6, paddingVertical: 4, paddingHorizontal: 9 }}>
             <Text style={{ color: '#3a2c08', fontSize: 9.5, fontWeight: '800' }}>{t(lang, 'sponsored')}</Text>
           </View>
         )}
-        <View style={{ position: 'absolute', top: 17, right: 17 }}><FavBtn id={n.id} /></View>
-        <View style={{ position: 'absolute', bottom: 17, right: 17 }}><AvailBadge avail={n.avail} label={t(lang, n.avail)} /></View>
+        <View style={{ position: 'absolute', top: 17, [isRTL ? 'left' : 'right']: 17 }}><FavBtn id={n.id} /></View>
+        <View style={{ position: 'absolute', bottom: 17, [isRTL ? 'left' : 'right']: 17 }}><AvailBadge avail={n.avail} label={t(lang, n.avail)} /></View>
       </View>
       <View style={{ paddingTop: 4, paddingBottom: 15, paddingHorizontal: 15 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ fontFamily: F.displayBold, fontSize: 17, fontWeight: '700', color: C.ink, lineHeight: 22, marginBottom: 4 }} numberOfLines={2}>{n.name}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Text style={{ fontFamily: F.displayBold, fontSize: 17, fontWeight: '700', color: C.ink, lineHeight: 22, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }} numberOfLines={2}>{n.name}</Text>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <Rating value={n.rating} count={n.reviews} size={12} />
               {n.verified && <Verified size={11} label={t(lang, 'verified')} />}
             </View>
@@ -49,13 +50,13 @@ function ResultCard({ n, onPress }: { n: typeof NURSERIES[0]; onPress: () => voi
             <Text style={{ fontSize: 10.5, color: C.mut }}>from / {n.unit === 'mo' ? 'month' : 'hour'}</Text>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
           {n.ages.map(a => (
             <View key={a} style={{ backgroundColor: C.tint, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999 }}>
               <Text style={{ fontSize: 11, fontWeight: '600', color: C.dgreen }}>{AGE_LABEL[a]}</Text>
             </View>
           ))}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 'auto' }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 3, [isRTL ? 'marginRight' : 'marginLeft']: 'auto' }}>
             <Icon name="pin" size={12} color={C.mut} />
             <Text style={{ fontSize: 11, color: C.mut }}>{n.district} · 2.3 km</Text>
           </View>
@@ -67,6 +68,7 @@ function ResultCard({ n, onPress }: { n: typeof NURSERIES[0]; onPress: () => voi
 
 export function ResultsScreen({ navigation, route }: any) {
   const { lang } = useApp();
+  const isRTL = lang === 'ar';
   const insets = useSafeAreaInsets();
   const initAges: string[] = route.params?.ages || [];
   const [ages, setAges] = useState(initAges);
@@ -104,15 +106,15 @@ export function ResultsScreen({ navigation, route }: any) {
       />
 
       {/* Search + sort */}
-      <View style={{ paddingHorizontal: 18, paddingBottom: 12, flexDirection: 'row', gap: 9 }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 13, height: 44 }}>
+      <View style={{ paddingHorizontal: 18, paddingBottom: 12, flexDirection: isRTL ? 'row-reverse' : 'row', gap: 9 }}>
+        <View style={{ flex: 1, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 13, height: 44 }}>
           <Icon name="search" size={18} color={C.mut} />
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder={t(lang, 'searchNurseries')}
             placeholderTextColor={C.mut}
-            style={{ flex: 1, fontSize: 13.5, color: C.ink, fontFamily: F.body, padding: 0 }}
+            style={{ flex: 1, fontSize: 13.5, color: C.ink, fontFamily: F.body, padding: 0, textAlign: isRTL ? 'right' : 'left' }}
             returnKeyType="search"
           />
           {query.length > 0 && (
@@ -121,7 +123,7 @@ export function ResultsScreen({ navigation, route }: any) {
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity onPress={() => setSortSheet(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 13, height: 44 }}>
+        <TouchableOpacity onPress={() => setSortSheet(true)} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 13, height: 44 }}>
           <Icon name="list" size={16} color={C.mut} />
           <Text style={{ fontFamily: F.bodyBold, fontSize: 13, fontWeight: '600', color: C.ink }}>{SORTS[sort]}</Text>
         </TouchableOpacity>
@@ -132,7 +134,7 @@ export function ResultsScreen({ navigation, route }: any) {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, gap: 8, alignItems: 'center', flexGrow: 1 }}>
           <Pill icon="sliders" onPress={() => navigation.push('filters', {})}>{t(lang, 'filters')}</Pill>
           {ages.map(a => (
-            <TouchableOpacity key={a} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.tint, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 11 }} onPress={() => setAges(ages.filter(x => x !== a))}>
+            <TouchableOpacity key={a} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, backgroundColor: C.tint, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 11 }} onPress={() => setAges(ages.filter(x => x !== a))}>
               <Text style={{ fontSize: 13, fontWeight: '600', color: C.dgreen, fontFamily: F.bodyBold }}>{AGE_LABEL[a]}</Text>
               <Icon name="x" size={13} color={C.dgreen} />
             </TouchableOpacity>
@@ -154,10 +156,10 @@ export function ResultsScreen({ navigation, route }: any) {
           <View style={{ flex: 1 }} />
           <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, paddingTop: 14, paddingBottom: Math.max(insets.bottom, 20) }}>
             <View style={{ width: 40, height: 4, borderRadius: 999, backgroundColor: '#e7e2d6', alignSelf: 'center', marginBottom: 14 }} />
-            <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 16 }}>{t(lang, 'sortBy')}</Text>
+            <Text style={{ fontFamily: F.displayBold, fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 16, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'sortBy')}</Text>
             {Object.entries(SORTS).map(([k, v], i, arr) => (
-              <TouchableOpacity key={k} onPress={() => { setSort(k); setSortSheet(false); }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: i < arr.length - 1 ? 1 : 0, borderBottomColor: C.line }}>
-                <Text style={{ fontFamily: sort === k ? F.bodyBold : F.body, fontSize: 15, color: C.ink, fontWeight: sort === k ? '700' : '400' }}>{v}</Text>
+              <TouchableOpacity key={k} onPress={() => { setSort(k); setSortSheet(false); }} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: i < arr.length - 1 ? 1 : 0, borderBottomColor: C.line }}>
+                <Text style={{ fontFamily: sort === k ? F.bodyBold : F.body, fontSize: 15, color: C.ink, fontWeight: sort === k ? '700' : '400', textAlign: isRTL ? 'right' : 'left' }}>{v}</Text>
                 {sort === k && <Icon name="check" size={19} color={C.green} />}
               </TouchableOpacity>
             ))}

@@ -10,6 +10,7 @@ import { t } from '../i18n';
 
 export function RegisterScreen({ navigation }: any) {
   const { lang, actions } = useApp();
+  const isRTL = lang === 'ar';
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [photoUri, setPhotoUri] = useState('');
@@ -58,7 +59,7 @@ export function RegisterScreen({ navigation }: any) {
                 </View>
               )}
             </View>
-            <View style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: C.header, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' }}>
+            <View style={{ position: 'absolute', bottom: 0, right: isRTL ? undefined : 0, left: isRTL ? 0 : undefined, width: 28, height: 28, borderRadius: 14, backgroundColor: C.header, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' }}>
               <Icon name="camera" size={14} color="#fff" />
             </View>
           </TouchableOpacity>
@@ -75,8 +76,8 @@ export function RegisterScreen({ navigation }: any) {
         />
 
         <View style={{ marginBottom: 24 }}>
-          <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 6, textAlign: lang === 'ar' ? 'right' : 'left' }}>{t(lang, 'whatsYourNumber')}</Text>
-          <Text style={{ fontSize: 13.5, color: C.mut, lineHeight: 20, textAlign: lang === 'ar' ? 'right' : 'left' }}>{t(lang, 'phoneHint')}</Text>
+          <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 6, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'whatsYourNumber')}</Text>
+          <Text style={{ fontSize: 13.5, color: C.mut, lineHeight: 20, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'phoneHint')}</Text>
         </View>
 
         <Field
@@ -92,7 +93,7 @@ export function RegisterScreen({ navigation }: any) {
 
         <TouchableOpacity
           onPress={() => setAgree(!agree)}
-          style={{ flexDirection: 'row', gap: 11, alignItems: 'flex-start', padding: 6, marginTop: 4 }}
+          style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 11, alignItems: 'flex-start', padding: 6, marginTop: 4 }}
         >
           <View style={{
             width: 22, height: 22, borderRadius: 7, flexShrink: 0,
@@ -102,7 +103,7 @@ export function RegisterScreen({ navigation }: any) {
           }}>
             {agree && <Icon name="check" size={15} color="#fff" />}
           </View>
-          <Text style={{ fontSize: 12.5, color: C.mut, lineHeight: 20, flex: 1, textAlign: lang === 'ar' ? 'right' : 'left' }}>
+          <Text style={{ fontSize: 12.5, color: C.mut, lineHeight: 20, flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
             {t(lang, 'agreeTerms')}
             <Text style={{ color: C.dgreen, fontWeight: '700' }}>{t(lang, 'termsOfService')}</Text>
             {t(lang, 'and')}

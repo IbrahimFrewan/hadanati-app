@@ -63,10 +63,10 @@ export function ReportDetailScreen({ navigation }: any) {
                 <Icon name="meal" size={18} color={C.dgreen} />
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', marginBottom: 2 }}>
-                    <Text style={{ fontFamily: F.bodyBold, fontSize: 13.5, fontWeight: '700', color: C.ink }}>{m.label}</Text>
-                    <Text style={{ fontSize: 11.5, color: C.mut }}>{m.time}</Text>
+                    <Text style={{ fontFamily: F.bodyBold, fontSize: 13.5, fontWeight: '700', color: C.ink, textAlign: isRTL ? 'right' : 'left' }}>{m.label}</Text>
+                    <Text style={{ fontSize: 11.5, color: C.mut, textAlign: isRTL ? 'right' : 'left' }}>{m.time}</Text>
                   </View>
-                  <Text style={{ fontSize: 12.5, color: C.mut }}>{m.desc}</Text>
+                  <Text style={{ fontSize: 12.5, color: C.mut, textAlign: isRTL ? 'right' : 'left' }}>{m.desc}</Text>
                 </View>
               </View>
             ))}

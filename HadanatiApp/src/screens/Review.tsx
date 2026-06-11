@@ -45,7 +45,7 @@ export function ReviewScreen({ navigation, route }: any) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontFamily: F.displayBold, fontSize: 17, fontWeight: '700', color: C.ink, marginBottom: 2, textAlign: isRTL ? 'right' : 'left' }}>{n?.name || ''}</Text>
-            <Text style={{ fontSize: 12, color: C.green, fontWeight: '600' }}>{t(lang, 'verifiedBooking')}</Text>
+            <Text style={{ fontSize: 12, color: C.green, fontWeight: '600', textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'verifiedBooking')}</Text>
           </View>
         </View>
 
@@ -73,7 +73,7 @@ export function ReviewScreen({ navigation, route }: any) {
         />
 
         {/* Add photos button */}
-        <TouchableOpacity style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: C.line, borderStyle: 'dashed', borderRadius: 12, padding: 13, backgroundColor: '#fff', alignSelf: 'flex-start' }}>
+        <TouchableOpacity style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: C.line, borderStyle: 'dashed', borderRadius: 12, padding: 13, backgroundColor: '#fff', alignSelf: isRTL ? 'flex-end' : 'flex-start' }}>
           <Icon name="camera" size={18} color={C.dgreen} />
           <Text style={{ fontFamily: F.bodyBold, fontSize: 13, fontWeight: '600', color: C.dgreen }}>{t(lang, 'addPhotos')}</Text>
         </TouchableOpacity>

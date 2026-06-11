@@ -63,7 +63,7 @@ export function BookTypeScreen({ navigation }: any) {
                     <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, fontFamily: F.bodyBold }}>{t(lang, k)}</Text>
                     <Text style={{ fontFamily: F.displayBold, fontWeight: '800', fontSize: 15, color: C.dgreen }}>{planPrice(k, n)} JD<Text style={{ fontSize: 11, color: C.mut, fontWeight: '600' }}>/{p.unit}</Text></Text>
                   </View>
-                  <Text style={{ fontSize: 11.5, color: C.mut, marginTop: 3, lineHeight: 17 }}>{p.def}</Text>
+                  <Text style={{ fontSize: 11.5, color: C.mut, marginTop: 3, lineHeight: 17, textAlign: isRTL ? 'right' : 'left' }}>{p.def}</Text>
                 </View>
               </TouchableOpacity>
             );
@@ -71,12 +71,12 @@ export function BookTypeScreen({ navigation }: any) {
         </View>
 
         <Text style={{ fontFamily: F.displayBold, fontSize: 17, fontWeight: '700', color: C.ink, marginBottom: 12, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'forWhichChild')}</Text>
-        <Text style={{ fontSize: 12, color: C.mut, marginBottom: 10 }}>Select one or more children</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        <Text style={{ fontSize: 12, color: C.mut, marginBottom: 10, textAlign: isRTL ? 'right' : 'left' }}>Select one or more children</Text>
+        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 10 }}>
           {store.children.map(ch => {
             const on = children.includes(ch.id);
             return (
-              <TouchableOpacity key={ch.id} onPress={() => toggleChild(ch.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 9, paddingRight: 14, paddingLeft: 8, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, borderColor: on ? C.green : C.line, backgroundColor: on ? C.tint : '#fff' }}>
+              <TouchableOpacity key={ch.id} onPress={() => toggleChild(ch.id)} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 9, paddingRight: isRTL ? 8 : 14, paddingLeft: isRTL ? 14 : 8, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, borderColor: on ? C.green : C.line, backgroundColor: on ? C.tint : '#fff' }}>
                 <View style={{ width: 32, height: 32, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.line }}>
                   <AvatarImage seed={ch.id} size={32} uri={ch.photoUri || undefined} />
                 </View>
@@ -85,7 +85,7 @@ export function BookTypeScreen({ navigation }: any) {
               </TouchableOpacity>
             );
           })}
-          <TouchableOpacity onPress={() => navigation.push('children', {})} style={{ flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 15, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.line, backgroundColor: '#fff' }}>
+          <TouchableOpacity onPress={() => navigation.push('children', {})} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 7, paddingHorizontal: 15, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.line, backgroundColor: '#fff' }}>
             <Icon name="plus" size={16} color={C.dgreen} />
             <Text style={{ fontSize: 13.5, fontWeight: '700', color: C.dgreen, fontFamily: F.bodyBold }}>{t(lang, 'addChild')}</Text>
           </TouchableOpacity>

@@ -9,6 +9,7 @@ import { t } from '../i18n';
 
 export function FiltersScreen({ navigation, route }: any) {
   const { lang } = useApp();
+  const isRTL = lang === 'ar';
   const [ages, setAges] = useState<string[]>(route.params?.ages || []);
   const [type, setType] = useState('monthly');
   const [price, setPrice] = useState(300);
@@ -32,7 +33,7 @@ export function FiltersScreen({ navigation, route }: any) {
 
   const Group = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <View style={{ marginBottom: 24 }}>
-      <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 12 }}>{title}</Text>
+      <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 12, textAlign: isRTL ? 'right' : 'left' }}>{title}</Text>
       {children}
     </View>
   );
@@ -51,13 +52,13 @@ export function FiltersScreen({ navigation, route }: any) {
       />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 22 }}>
         <Group title={t(lang, 'ageGroup')}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8 }}>
             {AGE_KEYS.map(a => <Pill key={a} active={ages.includes(a)} onPress={() => tog(a, ages, setAges)}>{t(lang, a)}</Pill>)}
           </View>
         </Group>
 
         <Group title={t(lang, 'bookingType')}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8 }}>
             {TYPES.map(tp => <Pill key={tp} active={type === tp} onPress={() => setType(tp)}>{t(lang, tp)}</Pill>)}
           </View>
         </Group>
@@ -69,19 +70,19 @@ export function FiltersScreen({ navigation, route }: any) {
         </Group>
 
         <Group title={t(lang, 'services')}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8 }}>
             {SERVICES.map(s => <Pill key={s} active={services.includes(s)} onPress={() => tog(s, services, setServices)}>{s}</Pill>)}
           </View>
         </Group>
 
         <Group title={t(lang, 'operatingHours')}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8 }}>
             {HOURS.map(([k, lk]) => <Pill key={k} active={hours === k} onPress={() => setHours(k as string)}>{t(lang, lk as string)}</Pill>)}
           </View>
         </Group>
 
         <Group title={t(lang, 'minimumRating')}>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8 }}>
             {RATINGS.map(([k, v]) => <Pill key={String(v)} active={rating === k} onPress={() => setRating(k as number)} icon={k ? 'star' : undefined}>{String(v)}</Pill>)}
           </View>
         </Group>

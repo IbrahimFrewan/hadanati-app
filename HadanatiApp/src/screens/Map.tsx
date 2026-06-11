@@ -169,9 +169,9 @@ export function MapScreen({ navigation }: any) {
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }}>
             <Icon name={isRTL ? 'chevRight' : 'chevLeft'} size={22} color={C.ink} />
           </TouchableOpacity>
-          <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 12, height: 42, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 13, shadowColor: '#000', shadowOpacity: 0.06, elevation: 2 }}>
+          <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 12, height: 42, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, paddingHorizontal: 13, shadowColor: '#000', shadowOpacity: 0.06, elevation: 2 }}>
             <Icon name="pin" size={17} color={C.green} />
-            <Text style={{ fontSize: 13.5, fontWeight: '600', color: C.ink, fontFamily: F.bodyBold }}>Amman, Jordan</Text>
+            <Text style={{ fontSize: 13.5, fontWeight: '600', color: C.ink, fontFamily: F.bodyBold, textAlign: isRTL ? 'right' : 'left' }}>Amman, Jordan</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.replace('results', {})} style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: C.header, alignItems: 'center', justifyContent: 'center', elevation: 3 }}>
             <Icon name="list" size={20} color="#fff" />
@@ -187,7 +187,7 @@ export function MapScreen({ navigation }: any) {
       {/* Locate me button */}
       <TouchableOpacity
         onPress={locateMe}
-        style={{ position: 'absolute', right: 16, bottom: btnBottom, zIndex: 3, width: 48, height: 48, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 8, elevation: 5 }}
+        style={{ position: 'absolute', [isRTL ? 'left' : 'right']: 16, bottom: btnBottom, zIndex: 3, width: 48, height: 48, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 8, elevation: 5 }}
       >
         {locating ? <ActivityIndicator size="small" color={C.green} /> : <Icon name="crosshair" size={22} color={C.green} />}
       </TouchableOpacity>
@@ -205,18 +205,18 @@ export function MapScreen({ navigation }: any) {
       {sel && (
         <TouchableOpacity
           onPress={() => navigation.push('nursery', { id: sel.id })}
-          style={{ position: 'absolute', left: 16, right: 16, bottom: cardBottom, zIndex: 4, backgroundColor: '#fff', borderRadius: 18, padding: 12, flexDirection: 'row', gap: 12, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 15, elevation: 8 }}
+          style={{ position: 'absolute', left: 16, right: 16, bottom: cardBottom, zIndex: 4, backgroundColor: '#fff', borderRadius: 18, padding: 12, flexDirection: isRTL ? 'row-reverse' : 'row', gap: 12, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 15, elevation: 8 }}
         >
           <View style={{ width: 70, height: 70, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
             <NurseryImage src={sel.img} seed={sel.id} radius={12} />
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 3 }}>{sel.name}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <Text style={{ fontFamily: F.displayBold, fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 3, textAlign: isRTL ? 'right' : 'left' }}>{sel.name}</Text>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <Rating value={sel.rating} count={sel.reviews} size={12} />
               <AvailBadge avail={sel.avail} label={t(lang, sel.avail)} />
             </View>
-            <Text style={{ fontFamily: F.displayBold, fontWeight: '800', fontSize: 14, color: C.dgreen }}>{sel.priceFrom} JD<Text style={{ fontSize: 11, color: C.mut, fontWeight: '600' }}> /{sel.unit}</Text></Text>
+            <Text style={{ fontFamily: F.displayBold, fontWeight: '800', fontSize: 14, color: C.dgreen, textAlign: isRTL ? 'right' : 'left' }}>{sel.priceFrom} JD<Text style={{ fontSize: 11, color: C.mut, fontWeight: '600' }}> /{sel.unit}</Text></Text>
           </View>
           <Icon name={isRTL ? 'chevLeft' : 'chevRight'} size={20} color={C.mut} />
         </TouchableOpacity>

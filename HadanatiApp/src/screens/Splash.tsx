@@ -15,9 +15,9 @@ const slides = [
   { titleKey: 'slide3Title', bodyKey: 'slide3Body', icon: 'image' as const },
 ];
 
-function Brand({ light }: { light?: boolean }) {
+function Brand({ light, isRTL }: { light?: boolean; isRTL?: boolean }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 9 }}>
       <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: light ? '#ffffff22' : C.header, alignItems: 'center', justifyContent: 'center' }}>
         <Icon name="leaf" size={22} color={light ? '#fff' : C.cream} />
       </View>
@@ -28,6 +28,7 @@ function Brand({ light }: { light?: boolean }) {
 
 export function SplashScreen({ navigation }: any) {
   const { lang, actions } = useApp();
+  const isRTL = lang === 'ar';
   const [idx, setIdx] = useState(0);
   const [uiLang, setUiLang] = useState(lang === 'ar' ? 'ع' : 'EN');
   const scrollRef = useRef<ScrollView>(null);
@@ -53,8 +54,8 @@ export function SplashScreen({ navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>
       {/* Header */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingTop: 4, paddingBottom: 8 }}>
-        <Brand />
+      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, paddingTop: 4, paddingBottom: 8 }}>
+        <Brand isRTL={isRTL} />
         <LangToggle lang={uiLang} onSet={handleLang} />
       </View>
 
