@@ -64,29 +64,12 @@ export type AppStore = {
 
 export function seedStore(): AppStore {
   return {
-    user: { name: 'Layla Haddad', phone: '7 9123 4567', email: '', photoUri: '' },
-    children: [
-      { id: 'c1', name: 'Yara', dob: '2023-04-12', ageGroup: 'toddler', allergies: 'Peanuts', photoUri: '' },
-    ],
-    favorites: ['n2'],
+    user: { name: '', phone: '', email: '', photoUri: '' },
+    children: [],
+    favorites: [],
     draft: {},
-    bookings: [
-      { id: 'b1', nurseryId: 'n2', childId: 'c1', type: 'monthly', status: 'active', dates: 'Started 1 May 2026', price: 160, unit: 'mo' },
-      { id: 'b2', nurseryId: 'n4', childId: 'c1', type: 'daily', status: 'pending', dates: 'Mon 9 Jun 2026', price: 14, unit: 'day' },
-    ],
-    notifications: [
-      { id: 't1', kind: 'report', title: 'New daily report', body: "Yara's day at Olive Tree Kids is ready.", time: '2h ago', read: false, target: 'ReportFeed' },
-      { id: 't2', kind: 'attendance', title: 'Checked in', body: 'Yara was checked in at 8:32 AM.', time: '5h ago', read: false, target: null },
-      { id: 't3', kind: 'emergency', title: 'Early closure today', body: 'Olive Tree Kids closes at 2 PM due to weather.', time: '1d ago', read: true, target: null },
-      { id: 't4', kind: 'payment', title: 'Payment received', body: 'Your May subscription was paid.', time: '3d ago', read: true, target: null },
-    ],
-    threads: [
-      { id: 'th1', nurseryId: 'n2', unread: 2, last: 'See you at pickup! 🌿', time: '10:24', messages: [
-        { me: false, text: 'Good morning! Yara had a lovely breakfast today.', time: '8:40' },
-        { me: true, text: "That's wonderful, thank you!", time: '9:02' },
-        { me: false, text: "She's napping now, all settled.", time: '10:20' },
-        { me: false, text: 'See you at pickup! 🌿', time: '10:24' },
-      ] },
-    ],
+    bookings: [],
+    notifications: [],
+    threads: [],
   };
 }

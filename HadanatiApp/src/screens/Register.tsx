@@ -38,7 +38,7 @@ export function RegisterScreen({ navigation }: any) {
   const submit = () => {
     if (!valid) { setErr('Enter a valid Jordan mobile number (9 digits, starts with 7).'); return; }
     setErr(''); setLoading(true);
-    actions.updateUser({ name: name.trim(), photoUri });
+    actions.updateUser({ name: name.trim(), photoUri, phone: digits });
     setTimeout(() => { setLoading(false); navigation.push('otp', { phone: digits }); }, 900);
   };
 
@@ -63,7 +63,7 @@ export function RegisterScreen({ navigation }: any) {
               <Icon name="camera" size={14} color="#fff" />
             </View>
           </TouchableOpacity>
-          <Text style={{ marginTop: 8, fontSize: 12, color: C.mut }}>{photoUri ? 'Tap to change photo' : 'Add your photo (optional)'}</Text>
+          <Text style={{ marginTop: 8, fontSize: 12, color: C.mut, fontFamily: F.body }}>{photoUri ? 'Tap to change photo' : 'Add your photo (optional)'}</Text>
         </View>
 
         <Field
@@ -77,7 +77,7 @@ export function RegisterScreen({ navigation }: any) {
 
         <View style={{ marginBottom: 24 }}>
           <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 6, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'whatsYourNumber')}</Text>
-          <Text style={{ fontSize: 13.5, color: C.mut, lineHeight: 20, textAlign: isRTL ? 'right' : 'left' }}>{t(lang, 'phoneHint')}</Text>
+          <Text style={{ fontSize: 13.5, color: C.mut, lineHeight: 20, textAlign: isRTL ? 'right' : 'left', fontFamily: F.body }}>{t(lang, 'phoneHint')}</Text>
         </View>
 
         <Field
@@ -103,11 +103,11 @@ export function RegisterScreen({ navigation }: any) {
           }}>
             {agree && <Icon name="check" size={15} color="#fff" />}
           </View>
-          <Text style={{ fontSize: 12.5, color: C.mut, lineHeight: 20, flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
+          <Text style={{ fontSize: 12.5, color: C.mut, lineHeight: 20, flex: 1, textAlign: isRTL ? 'right' : 'left', fontFamily: F.body }}>
             {t(lang, 'agreeTerms')}
-            <Text style={{ color: C.dgreen, fontWeight: '700' }}>{t(lang, 'termsOfService')}</Text>
+            <Text style={{ color: C.dgreen, fontWeight: '700', fontFamily: F.bodyBold }}>{t(lang, 'termsOfService')}</Text>
             {t(lang, 'and')}
-            <Text style={{ color: C.dgreen, fontWeight: '700' }}>{t(lang, 'privacyPolicy')}</Text>.
+            <Text style={{ color: C.dgreen, fontWeight: '700', fontFamily: F.bodyBold }}>{t(lang, 'privacyPolicy')}</Text>.
           </Text>
         </TouchableOpacity>
       </ScrollView>

@@ -32,7 +32,7 @@ export function LoginScreen({ navigation }: any) {
           <Text style={{ fontFamily: F.displayBold, fontSize: 26, fontWeight: '700', color: C.ink, marginBottom: 8, textAlign: isRTL ? 'right' : 'left' }}>
             {t(lang, 'welcomeBack')}
           </Text>
-          <Text style={{ fontSize: 13.5, color: C.mut, lineHeight: 21, textAlign: isRTL ? 'right' : 'left' }}>
+          <Text style={{ fontSize: 13.5, color: C.mut, lineHeight: 21, textAlign: isRTL ? 'right' : 'left', fontFamily: F.body }}>
             {t(lang, 'loginSubtitle')}
           </Text>
         </View>
@@ -51,7 +51,7 @@ export function LoginScreen({ navigation }: any) {
 
         <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 9, backgroundColor: C.cream, borderRadius: 12, padding: 13, marginTop: 6 }}>
           <Icon name="shield" size={17} color={C.dgreen} />
-          <Text style={{ fontSize: 12, color: C.mut, lineHeight: 18, flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
+          <Text style={{ fontSize: 12, color: C.mut, lineHeight: 18, flex: 1, textAlign: isRTL ? 'right' : 'left', fontFamily: F.body }}>
             {t(lang, 'noPasswordNote')}
           </Text>
         </View>
@@ -62,7 +62,7 @@ export function LoginScreen({ navigation }: any) {
           {loading ? t(lang, 'sendingCode') : t(lang, 'sendLoginCode')}
         </Button>
         <View style={{ marginTop: 14, alignItems: 'center' }}>
-          <Text style={{ fontSize: 13, color: C.mut }}>
+          <Text style={{ fontSize: 13, color: C.mut, fontFamily: F.body }}>
             {t(lang, 'newHere')}{' '}
             <Text
               onPress={() => navigation.replace('register')}

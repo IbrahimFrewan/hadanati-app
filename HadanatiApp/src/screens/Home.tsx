@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, Modal, FlatList, TextInput,
-  BackHandler, Alert,
+  BackHandler, Alert, Image,
 } from 'react-native';
 import Svg, { Defs, LinearGradient as SVGGrad, Stop, Rect as SVGRect, Circle, G } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
 import { Icon } from '../components/Icon';
-import { SectionTitle, NurseryImage, AvatarImage, AvailBadge, Rating } from '../components';
+import { SectionTitle, NurseryImage, AvailBadge, Rating } from '../components';
 import { useApp } from '../context/AppContext';
 import { NURSERIES, DISTRICTS } from '../data';
 import { t } from '../i18n';
@@ -38,6 +38,19 @@ function FavBtn({ id }: { id: string }) {
     }} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
       <Icon name="heart" size={17} color={on ? C.danger : C.mut} fill={on ? C.danger : 'none'} />
     </TouchableOpacity>
+  );
+}
+
+function Avatar({ name, photoUri, size }: { name: string; photoUri?: string; size: number }) {
+  const [imgError, setImgError] = useState(false);
+  const initials = name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+  if (photoUri && !imgError) {
+    return <Image source={{ uri: photoUri }} style={{ width: size, height: size }} resizeMode="cover" onError={() => setImgError(true)} />;
+  }
+  return (
+    <View style={{ width: size, height: size, backgroundColor: '#ffffff30', alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontFamily: F.bodyBold, fontSize: size * 0.33, fontWeight: '700', color: '#fff' }}>{initials || '?'}</Text>
+    </View>
   );
 }
 
@@ -213,7 +226,7 @@ export function HomeScreen({ navigation }: any) {
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate('profile')} style={{ width: 42, height: 42, borderRadius: 21, overflow: 'hidden', borderWidth: 1, borderColor: '#ffffff3a' }}>
-                  <AvatarImage seed={store.user.name} size={42} />
+                  <Avatar name={store.user.name} photoUri={store.user.photoUri || undefined} size={42} />
                 </TouchableOpacity>
               </View>
             </View>
