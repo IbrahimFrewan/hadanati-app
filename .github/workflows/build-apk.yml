@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -50,33 +50,18 @@ jobs:
         working-directory: ${{ matrix.app }}
         run: eas init --non-interactive --force || true
 
-      - name: EAS build (Android APK, profile=preview)
-        working-directory: ${{ matrix.app }}
-        run: eas build --platform android --profile preview --non-interactive --wait
-
-      - name: Resolve APK download URL
-        id: url
+      # Submit to EAS WITHOUT waiting — EAS free-tier queues can exceed the
+      # runner's time limit. The build continues on Expo's servers; download the
+      # APK from the build page printed below (and in the run Summary).
+      - name: Submit EAS build (Android APK, profile=preview)
         working-directory: ${{ matrix.app }}
         run: |
-          URL=$(eas build:list --platform android --limit 1 --non-interactive --json \
-            | jq -r '.[0].artifacts.buildUrl // .[0].artifacts.applicationArchiveUrl // empty')
-          echo "Latest build artifact: $URL"
-          if [ -z "$URL" ]; then
-            echo "::error title=No APK URL (${{ matrix.app }})::EAS build finished without a downloadable artifact (check the EAS build logs / quota)."
-            exit 1
-          fi
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
-
-      - name: Download APK
-        working-directory: ${{ matrix.app }}
-        run: |
-          curl -L -o "${{ matrix.app }}.apk" "${{ steps.url.outputs.url }}"
-          ls -lh "${{ matrix.app }}.apk"
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.app }}-apk
-          path: ${{ matrix.app }}/${{ matrix.app }}.apk
-          retention-days: 30
-          if-no-files-found: error
+          eas build --platform android --profile preview --non-interactive --no-wait 2>&1 | tee /tmp/eas.log
+          URL=$(grep -oE 'https://expo\.dev/[^ ]+/builds/[a-f0-9-]+' /tmp/eas.log | head -1)
+          [ -n "$URL" ] || URL=$(grep -oE 'https://expo\.dev[^ ]+' /tmp/eas.log | head -1)
+          echo "## ${{ matrix.app }} — EAS Android build submitted ✅" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Track progress and download the **.apk** here when it finishes:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=EAS build (${{ matrix.app }})::$URL"
