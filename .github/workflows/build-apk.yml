@@ -75,10 +75,21 @@ jobs:
             exit 1
           fi
 
+      - name: Locate APK
+        run: |
+          found=$(find ${{ matrix.app }}/android -name '*.apk' 2>/dev/null)
+          echo "APKs found:"; echo "$found"
+          if [ -z "$found" ]; then
+            echo "::error title=No APK (${{ matrix.app }})::assembleRelease produced no .apk under android/"
+          else
+            echo "::notice title=APK path (${{ matrix.app }})::${found//$'\n'/%0A}"
+          fi
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.app }}-apk
-          path: ${{ matrix.app }}/android/app/build/outputs/apk/**/*.apk
           retention-days: 30
           if-no-files-found: error
+          path: |
+            ${{ matrix.app }}/android/**/*.apk
