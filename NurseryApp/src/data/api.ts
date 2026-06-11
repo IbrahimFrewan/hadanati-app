@@ -1,11 +1,14 @@
 // Typed data-access layer for the nursery-provider app: maps Supabase rows <->
 // the NurseryStore shapes in ./index.ts. Screens keep consuming NurseryStore;
 // only this module talks to the backend. All calls assume isSupabaseConfigured.
+import { decode } from 'base64-arraybuffer';
 import { supabase } from '../lib/supabase';
 import {
   NurseryStore, BookingRequest, RosterChild, CapacityGroup, Invoice, Payout,
   MessageThread, Notification,
 } from './index';
+
+export type KycDocType = 'license' | 'commercial' | 'owner_id' | 'insurance';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -197,6 +200,35 @@ export async function sendMessage(ownerId: string, threadId: string, text: strin
 export async function markNotificationsRead(ownerId: string) {
   await supabase.from('notifications').update({ read: true })
     .eq('recipient_id', ownerId).eq('read', false);
+}
+
+/**
+ * Upload one KYC document (a photo, as base64 from the image picker) to the
+ * private `kyc` bucket and record it in nursery_documents. Path is
+ * `<nursery_id>/<type>.<ext>` so the storage RLS authorizes it by ownership.
+ * Re-uploading a type replaces the previous one.
+ */
+export async function uploadKycDocument(
+  nurseryId: string,
+  type: KycDocType,
+  file: { base64: string; mimeType?: string },
+): Promise<string> {
+  const ext = file.mimeType?.includes('png') ? 'png' : 'jpg';
+  const path = `${nurseryId}/${type}.${ext}`;
+
+  const { error: upErr } = await supabase.storage.from('kyc')
+    .upload(path, decode(file.base64), {
+      contentType: file.mimeType || 'image/jpeg', upsert: true,
+    });
+  if (upErr) throw upErr;
+
+  await supabase.from('nursery_documents').delete()
+    .eq('nursery_id', nurseryId).eq('type', type);
+  const { error: insErr } = await supabase.from('nursery_documents')
+    .insert({ nursery_id: nurseryId, type, file_path: path, status: 'pending' });
+  if (insErr) throw insErr;
+
+  return path;
 }
 
 export async function submitKyc(nurseryId: string) {

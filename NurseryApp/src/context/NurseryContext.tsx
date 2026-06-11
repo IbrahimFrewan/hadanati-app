@@ -20,6 +20,8 @@ interface NurseryContextType {
     readNotifs: () => void;
     sendMessage: (threadId: string, text: string) => void;
     setListed: (b: boolean) => void;
+    uploadKyc: (type: api.KycDocType, file: { base64: string; mimeType?: string }) => Promise<void>;
+    submitKyc: () => Promise<void>;
     auth: {
       signIn: (email: string, password: string) => Promise<void>;
       signUp: (email: string, password: string, fullName: string) => Promise<void>;
@@ -93,6 +95,17 @@ export function NurseryProvider({ children }: { children: React.ReactNode }) {
   const oid = () => ownerIdRef.current;
   const nid = () => nurseryIdRef.current;
 
+  // Resolve the owner's nursery id, fetching it if the store hasn't hydrated yet
+  // (e.g. immediately after registration, when navigating into KYC).
+  const ensureNurseryId = async (): Promise<string | null> => {
+    if (nurseryIdRef.current) return nurseryIdRef.current;
+    const o = oid();
+    if (!o) return null;
+    const id = await api.fetchNurseryId(o);
+    nurseryIdRef.current = id;
+    return id;
+  };
+
   const actions: NurseryContextType['actions'] = {
     patch: (p) => setStore((s) => ({ ...s, ...p })),
     setReg: (p) => setStore((s) => ({ ...s, registration: { ...s.registration, ...p } })),
@@ -133,6 +146,21 @@ export function NurseryProvider({ children }: { children: React.ReactNode }) {
     setListed: (b) => {
       setStore((s) => ({ ...s, nursery: { ...s.nursery, listed: b } }));
       if (remote && nid()) api.setListed(nid()!, b).catch(w);
+    },
+    uploadKyc: async (type, file) => {
+      if (!remote) return;
+      const id = await ensureNurseryId();
+      if (!id) throw new Error('No nursery found for this account.');
+      await api.uploadKycDocument(id, type, file);
+    },
+    submitKyc: async () => {
+      if (!remote) return;
+      const id = await ensureNurseryId();
+      if (!id) throw new Error('No nursery found for this account.');
+      await api.submitKyc(id);
+      setStore((s) => ({ ...s, approvalStatus: 'pending' }));
+      const o = oid();
+      if (o) hydrateFromServer(o);
     },
     auth: {
       signIn: async (email, password) => { await api.auth.signIn(email, password); },
