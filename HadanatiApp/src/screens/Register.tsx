@@ -59,7 +59,7 @@ export function RegisterScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>
-      <TopBar title={t(lang, 'createAccount')} onBack={() => navigation.goBack()} />
+      <TopBar title={t(lang, 'createAccount')} onBack={() => navigation.canGoBack() ? navigation.goBack() : navigation.replace('splash')} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24 }}>
 
         {/* Photo picker */}

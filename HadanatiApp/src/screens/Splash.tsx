@@ -75,12 +75,26 @@ export function SplashScreen({ navigation }: any) {
               <View
                 style={{ height: 286, borderRadius: 28, backgroundColor: C.header, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', marginBottom: 28 }}
               >
-                <View style={{ width: 150, height: 150, borderRadius: 36, backgroundColor: '#ffffff14', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name={sl.icon} size={80} color={C.cream} />
+                {/* Layered brand motif */}
+                <View style={{ position: 'absolute', top: -55, right: -55, width: 200, height: 200, borderRadius: 100, backgroundColor: '#ffffff0d' }} />
+                <View style={{ position: 'absolute', bottom: -45, left: -35, width: 160, height: 160, borderRadius: 80, backgroundColor: '#ffffff0a' }} />
+                <View style={{ position: 'absolute', top: 22, left: 26, opacity: 0.35 }}>
+                  <Icon name="star" size={18} color={C.cream} />
+                </View>
+                <View style={{ position: 'absolute', bottom: 26, right: 30, opacity: 0.35 }}>
+                  <Icon name="heart" size={20} color={C.cream} />
+                </View>
+                {/* Icon badge with a double ring */}
+                <View style={{ width: 172, height: 172, borderRadius: 48, backgroundColor: '#ffffff10', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ffffff22' }}>
+                  <View style={{ width: 128, height: 128, borderRadius: 34, backgroundColor: '#ffffff16', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={sl.icon} size={68} color={C.cream} />
+                  </View>
                 </View>
               </View>
 
-              <Text style={{ fontFamily: F.displayBold, fontSize: 30, fontWeight: '700', color: C.ink, lineHeight: 36, marginBottom: 10, textAlign: lang === 'ar' ? 'right' : 'left' }}>
+              {/* Accent bar anchors the title */}
+              <View style={{ width: 46, height: 5, borderRadius: 999, backgroundColor: C.green, marginBottom: 12, alignSelf: lang === 'ar' ? 'flex-end' : 'flex-start' }} />
+              <Text style={{ fontFamily: F.displayBold, fontSize: 30, fontWeight: '700', color: C.ink, lineHeight: 38, marginBottom: 10, textAlign: lang === 'ar' ? 'right' : 'left' }}>
                 {t(lang, sl.titleKey)}
               </Text>
               <Text style={{ fontSize: 14.5, color: C.mut, lineHeight: 22, textAlign: lang === 'ar' ? 'right' : 'left' }}>

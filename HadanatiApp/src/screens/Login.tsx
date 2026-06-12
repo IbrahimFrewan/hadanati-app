@@ -50,7 +50,9 @@ export function LoginScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>
-      <TopBar title={t(lang, 'login')} onBack={() => navigation.goBack()} />
+      {/* Login is reached via replace() from Splash, so there may be no screen
+          to go back to — fall back to the onboarding. */}
+      <TopBar title={t(lang, 'login')} onBack={() => navigation.canGoBack() ? navigation.goBack() : navigation.replace('splash')} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: 8 }} keyboardShouldPersistTaps="handled">
         <View style={{ marginBottom: 24 }}>
           <Text style={{ fontFamily: F.displayBold, fontSize: 26, fontWeight: '700', color: C.ink, marginBottom: 8, textAlign: isRTL ? 'right' : 'left' }}>
