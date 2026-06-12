@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
 import {
   View, Text, TouchableOpacity, TextInput, Image, ScrollView,
@@ -62,13 +63,16 @@ export function TopBar({
   theme?: 'light' | 'dark'; subtitle?: string;
 }) {
   const { lang } = useN();
+  const insets = useSafeAreaInsets();
   const isRTL = lang === 'AR';
   const dark = theme === 'dark';
   const textColor = dark ? C.cream : C.ink;
   const backIcon = isRTL ? 'chevRight' : 'chevLeft';
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12, zIndex: 2 }}>
+    // Top safe-area inset lives here so every screen using TopBar clears the
+    // status bar (screens use plain View roots).
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: insets.top + 6, paddingBottom: 12, zIndex: 2 }}>
       {onBack ? (
         <TouchableOpacity onPress={onBack} style={{
           width: 40, height: 40, borderRadius: 999,
