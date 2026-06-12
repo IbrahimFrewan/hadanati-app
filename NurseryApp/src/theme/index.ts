@@ -25,13 +25,13 @@ const LATIN_FONTS = {
 };
 
 const ARABIC_FONTS = {
-  display: 'Cairo_700Bold',
-  displayMedium: 'Cairo_500Medium',
-  displayBold: 'Cairo_700Bold',
-  displayExtraBold: 'Cairo_800ExtraBold',
-  body: 'Cairo_400Regular',
-  bodyMedium: 'Cairo_500Medium',
-  bodyBold: 'Cairo_700Bold',
+  display: 'IBMPlexSansArabic_700Bold',
+  displayMedium: 'IBMPlexSansArabic_500Medium',
+  displayBold: 'IBMPlexSansArabic_700Bold',
+  displayExtraBold: 'IBMPlexSansArabic_700Bold', // IBM Plex Sans Arabic maxes at 700
+  body: 'IBMPlexSansArabic_400Regular',
+  bodyMedium: 'IBMPlexSansArabic_500Medium',
+  bodyBold: 'IBMPlexSansArabic_700Bold',
 };
 
 export const F = { ...LATIN_FONTS };
@@ -41,4 +41,19 @@ export let IS_RTL = false;
 export function setLangFonts(lang: string) {
   Object.assign(F, lang === 'AR' ? ARABIC_FONTS : LATIN_FONTS);
   IS_RTL = lang === 'AR';
+}
+
+// Inject the active font into EVERY <Text> by default (texts without an
+// explicit fontFamily otherwise fall back to the system font — visible with
+// Arabic). Explicit fontFamily still wins.
+import React from 'react';
+import { Text } from 'react-native';
+const RNText = Text as any;
+if (RNText.render && !RNText.__fontPatched) {
+  RNText.__fontPatched = true;
+  const origRender = RNText.render;
+  RNText.render = function (...args: any[]) {
+    const el = origRender.apply(this, args);
+    return React.cloneElement(el, { style: [{ fontFamily: F.body }, el.props.style] });
+  };
 }
