@@ -21,11 +21,14 @@ function Row({
   icon: string; label: string; value?: string; onPress?: () => void;
   danger?: boolean; right?: React.ReactNode; last?: boolean; isRTL?: boolean;
 }) {
-  const Wrap: any = onPress ? TouchableOpacity : View;
-  const pressProps = onPress ? { onPress, activeOpacity: 0.7 } : {};
+  // Always a TouchableOpacity (disabled when not pressable) — the proven-safe
+  // pattern from NurseryApp's account page. The dynamic Wrap (TouchableOpacity
+  // vs View) tripped Fabric's native prop validation on device.
   return (
-    <Wrap
-      {...pressProps}
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!onPress}
+      activeOpacity={0.7}
       style={{
         flexDirection: isRTL ? 'row-reverse' : 'row',
         alignItems: 'center', gap: 13,
@@ -41,7 +44,7 @@ function Row({
       </Text>
       {value ? <Text style={{ fontSize: 12.5, color: C.mut }}>{value}</Text> : null}
       {right ? right : (onPress && !danger ? <Icon name={isRTL ? 'chevLeft' : 'chevRight'} size={18} color={C.mut} /> : null)}
-    </Wrap>
+    </TouchableOpacity>
   );
 }
 
