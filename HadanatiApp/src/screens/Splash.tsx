@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Dimensions, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { C, F } from '../theme';
@@ -41,15 +41,27 @@ export function SplashScreen({ navigation }: any) {
     actions.setLang(newLang);
   };
 
+  // In Arabic the deck is reversed so a finger-drag advances right-to-left.
+  // `idx` stays LOGICAL (0 = first slide); these map logical <-> visual.
+  const toVisual = (i: number) => (isRTL ? slides.length - 1 - i : i);
+
   const goTo = (i: number) => {
     setIdx(i);
-    scrollRef.current?.scrollTo({ x: i * W, animated: true });
+    scrollRef.current?.scrollTo({ x: toVisual(i) * W, animated: true });
   };
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const newIdx = Math.round(e.nativeEvent.contentOffset.x / W);
-    if (newIdx !== idx) setIdx(newIdx);
+    const vis = Math.round(e.nativeEvent.contentOffset.x / W);
+    const logical = isRTL ? slides.length - 1 - vis : vis;
+    if (logical !== idx) setIdx(logical);
   };
+
+  // Keep the current slide in place when the language (direction) flips.
+  useEffect(() => {
+    requestAnimationFrame(() =>
+      scrollRef.current?.scrollTo({ x: toVisual(idx) * W, animated: false }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRTL]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.page }}>
@@ -70,7 +82,7 @@ export function SplashScreen({ navigation }: any) {
           style={{ flex: 1 }}
           contentContainerStyle={{ alignItems: 'center' }}
         >
-          {slides.map((sl, i) => (
+          {(isRTL ? [...slides].reverse() : slides).map((sl, i) => (
             <View key={i} style={{ width: W, paddingHorizontal: 26, justifyContent: 'center' }}>
               <View
                 style={{ height: 286, borderRadius: 28, backgroundColor: C.header, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', marginBottom: 28 }}

@@ -131,7 +131,7 @@ export function ResultsScreen({ navigation, route }: any) {
 
       {/* Filter chips */}
       <View style={{ height: 46, marginBottom: 8 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, gap: 8, alignItems: 'center', flexGrow: 1 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, gap: 8, alignItems: 'center', flexGrow: 1, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
           <Pill icon="sliders" onPress={() => navigation.push('filters', {})}>{t(lang, 'filters')}</Pill>
           {ages.map(a => (
             <TouchableOpacity key={a} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, backgroundColor: C.tint, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 11 }} onPress={() => setAges(ages.filter(x => x !== a))}>
