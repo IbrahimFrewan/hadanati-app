@@ -84,7 +84,7 @@ export function Icon({ name, size = 22, color = 'currentColor', fill = 'none', s
     case 'chart': return <Svg {...props}><Path d="M4 20V4M4 20h16M8 16v-4M12 16V8M16 16v-7" /></Svg>;
     case 'users': return <Svg {...props}><Circle cx="9" cy="8" r="3.4" /><Path d="M3 19a6 6 0 0 1 12 0M16 5.5a3.4 3.4 0 0 1 0 6.6M21 19a6 6 0 0 0-4-5.6" /></Svg>;
     case 'wallet': return <Svg {...props}><Rect x="3" y="6" width="18" height="13" rx="2.5" /><Path d="M3 10h18M16.5 13.5h0" /></Svg>;
-    case 'gift': return <Svg {...props}><Rect x="4" y="9" width="16" height="11" rx="1.5" /><Path d="M4 13h16M12 9v11M12 9C12 6 10.5 4.5 9 4.5S6.5 6 7.5 7.5 12 9 12Zm0 0c0-3 1.5-4.5 3-4.5S17.5 6 16.5 7.5 12 9 12 9Z" /></Svg>;
+    case 'gift': return <Svg {...props}><Rect x="4" y="9" width="16" height="11" rx="1.5" /><Path d="M4 13h16M12 9v11M12 9C10.5 6.5 9.5 4.5 7.8 4.5 6.3 4.5 5 5.5 5 6.8 5 8 6.2 9 7.8 9ZM12 9C13.5 6.5 14.5 4.5 16.2 4.5 17.7 4.5 19 5.5 19 6.8 19 8 17.8 9 16.2 9Z" /></Svg>;
     default: return null;
   }
 }
