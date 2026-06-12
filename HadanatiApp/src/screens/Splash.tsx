@@ -106,7 +106,7 @@ export function SplashScreen({ navigation }: any) {
       </View>
 
       {/* Dots */}
-      <View style={{ flexDirection: 'row', gap: 7, justifyContent: 'center', marginBottom: 22 }}>
+      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 7, justifyContent: 'center', marginBottom: 22 }}>
         {slides.map((_, k) => (
           <TouchableOpacity key={k} onPress={() => goTo(k)} style={{ height: 7, borderRadius: 999, width: k === idx ? 26 : 7, backgroundColor: k === idx ? C.green : '#d8ddd3' }} />
         ))}

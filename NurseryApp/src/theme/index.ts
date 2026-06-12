@@ -43,17 +43,22 @@ export function setLangFonts(lang: string) {
   IS_RTL = lang === 'AR';
 }
 
-// Inject the active font into EVERY <Text> by default (texts without an
-// explicit fontFamily otherwise fall back to the system font — visible with
-// Arabic). Explicit fontFamily still wins.
-import React from 'react';
+// Give EVERY <Text> the live brand font by default. RN 0.85's Text is a plain
+// function component (no forwardRef .render to patch), so we hook the JSX
+// runtime itself — the path Expo/Metro actually uses in production builds.
+// Explicit fontFamily in a style still wins (it comes later in the array).
 import { Text } from 'react-native';
-const RNText = Text as any;
-if (RNText.render && !RNText.__fontPatched) {
-  RNText.__fontPatched = true;
-  const origRender = RNText.render;
-  RNText.render = function (...args: any[]) {
-    const el = origRender.apply(this, args);
-    return React.cloneElement(el, { style: [{ fontFamily: F.body }, el.props.style] });
+try {
+  const wrap = (orig: any) => (type: any, props: any, ...rest: any[]) => {
+    if (type === Text && props) {
+      props = { ...props, style: [{ fontFamily: F.body }, props.style] };
+    }
+    return orig(type, props, ...rest);
   };
-}
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const rt = require('react/jsx-runtime') as any;
+  if (!rt.__fontPatched) { rt.__fontPatched = true; rt.jsx = wrap(rt.jsx); rt.jsxs = wrap(rt.jsxs); }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const rtd = require('react/jsx-dev-runtime') as any;
+  if (rtd?.jsxDEV && !rtd.__fontPatched) { rtd.__fontPatched = true; rtd.jsxDEV = wrap(rtd.jsxDEV); }
+} catch {}
