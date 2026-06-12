@@ -15,7 +15,7 @@ export function NReportCompose() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<RouteProp<RootStackParamList, 'NReportCompose'>>();
   const { lang, store, actions } = useN();
-  const child = store.roster.find((k) => k.id === route.params.childId) || store.roster[0];
+  const child = store.roster.find((k) => k.id === route.params.childId) || store.roster[0] || ({ id: '', name: '—', group: '' } as any);
 
   const [mood, setMood] = useState('happy');
   const [meals, setMeals] = useState({ breakfast: 'all', lunch: 'most', snack: 'all' });

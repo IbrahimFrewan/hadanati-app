@@ -6,6 +6,7 @@ import { Icon } from '../components/Icon';
 import { Button, StatusPill, NurseryImage, EmptyView } from '../components';
 import { useApp } from '../context/AppContext';
 import { getNursery } from '../data';
+import QRCode from 'react-native-qrcode-svg';
 import { t } from '../i18n';
 
 const TABS: Record<string, string[]> = {
@@ -19,6 +20,7 @@ export function BookingsScreen({ navigation }: any) {
   const { store, setStore, lang, actions } = useApp();
   const [tab, setTab] = useState('active');
   const [cancelTarget, setCancelTarget] = useState<any>(null);
+  const [qrModal, setQrModal] = useState<string | null>(null);
   const isRTL = lang === 'ar';
   const insets = useSafeAreaInsets();
 
@@ -38,11 +40,7 @@ export function BookingsScreen({ navigation }: any) {
 
   const showPickupCode = async (bookingId: string) => {
     try {
-      const code = await actions.issuePickupCode(bookingId);
-      Alert.alert(
-        t(lang, 'pickupCodeTitle'),
-        `${t(lang, 'pickupCodeBody')}\n\n${code}`,
-      );
+      setQrModal(await actions.issuePickupCode(bookingId));
     } catch (e: any) {
       Alert.alert('', e?.message ?? 'Could not get a pickup code.');
     }
@@ -111,6 +109,12 @@ export function BookingsScreen({ navigation }: any) {
                   </View>
                 </View>
               </View>
+              {(b.status === 'confirmed' || b.status === 'active') && (
+                <TouchableOpacity onPress={() => showPickupCode(b.id)} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 11, backgroundColor: C.tint, borderTopWidth: 1, borderTopColor: C.line }}>
+                  <Icon name="qr" size={17} color={C.dgreen} />
+                  <Text style={{ fontFamily: F.bodyBold, fontSize: 13, fontWeight: '700', color: C.dgreen }}>{t(lang, 'pickupCode')}</Text>
+                </TouchableOpacity>
+              )}
               <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', borderTopWidth: 1, borderTopColor: C.line }}>
                 <TouchableOpacity onPress={() => navigation.push('nursery', { id: n.id })} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 }}>
                   <Icon name="eye" size={16} color={C.dgreen} /><Text style={{ fontFamily: F.bodyBold, fontSize: 12.5, fontWeight: '600', color: C.dgreen }}>{t(lang, 'view')}</Text>
@@ -120,14 +124,6 @@ export function BookingsScreen({ navigation }: any) {
                     <View style={{ width: 1, backgroundColor: C.line }} />
                     <TouchableOpacity onPress={() => navigation.navigate('messages')} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 }}>
                       <Icon name="chat" size={16} color={C.dgreen} /><Text style={{ fontFamily: F.bodyBold, fontSize: 12.5, fontWeight: '600', color: C.dgreen }}>{t(lang, 'message')}</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-                {(b.status === 'confirmed' || b.status === 'active') && (
-                  <>
-                    <View style={{ width: 1, backgroundColor: C.line }} />
-                    <TouchableOpacity onPress={() => showPickupCode(b.id)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 }}>
-                      <Icon name="qr" size={16} color={C.dgreen} /><Text style={{ fontFamily: F.bodyBold, fontSize: 12.5, fontWeight: '600', color: C.dgreen }}>{t(lang, 'pickupCode')}</Text>
                     </TouchableOpacity>
                   </>
                 )}
@@ -182,6 +178,21 @@ export function BookingsScreen({ navigation }: any) {
               <Button variant="danger" onPress={doCancel} style={{ flex: 1 }}>{t(lang, 'cancelRefund')}</Button>
             </View>
           </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+
+      {/* Pickup QR — the nursery scans this at drop-off/pickup */}
+      {qrModal && (
+        <TouchableOpacity activeOpacity={1} onPress={() => setQrModal(null)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#1c281ecc', zIndex: 10, alignItems: 'center', justifyContent: 'center', padding: 30 }}>
+        <View style={{ backgroundColor: '#fff', borderRadius: 26, padding: 26, alignItems: 'center', alignSelf: 'stretch' }}>
+            <Text style={{ fontFamily: F.displayBold, fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 6, textAlign: 'center' }}>{t(lang, 'pickupCodeTitle')}</Text>
+            <Text style={{ fontFamily: F.body, fontSize: 12.5, color: C.mut, textAlign: 'center', lineHeight: 19, marginBottom: 18 }}>{t(lang, 'pickupCodeBody')}</Text>
+            <View style={{ padding: 14, borderRadius: 16, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff' }}>
+              <QRCode value={qrModal} size={188} color={C.ink} backgroundColor="#ffffff" />
+            </View>
+            <Text style={{ fontFamily: F.displayBold, fontSize: 24, letterSpacing: 6, color: C.dgreen, marginTop: 16 }}>{qrModal}</Text>
+            <Button full onPress={() => setQrModal(null)} style={{ marginTop: 18 }}>{lang === 'ar' ? 'تم' : 'Done'}</Button>
+          </View>
         </TouchableOpacity>
       )}
     </SafeAreaView>

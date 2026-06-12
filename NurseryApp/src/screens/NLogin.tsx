@@ -15,7 +15,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function NLogin() {
   const navigation = useNavigation<Nav>();
-  const { lang, actions } = useN();
+  const { lang, store, actions } = useN();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
@@ -36,7 +36,13 @@ export function NLogin() {
       }
       return;
     }
-    // Mock fallback (no backend configured): proceed to the dashboard.
+    // Mock fallback (no backend configured): only a locally-registered owner
+    // may sign in — no more open door.
+    const reg = store.registration;
+    if (!reg.email || reg.email.trim().toLowerCase() !== email.trim().toLowerCase() || !password) {
+      setErr(t(lang, 'phoneNotRegistered'));
+      return;
+    }
     navigation.replace('MainTabs');
   };
 

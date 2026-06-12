@@ -195,39 +195,14 @@ const N_NOTIFS: Notification[] = [
 ];
 
 export function seedNursery(): NurseryStore {
+  // Blank store: a fresh install shows no demo data — everything comes from
+  // in-app registration (mock mode) or the server (configured mode).
   return {
-    nursery: {
-      id: 'n2',
-      name: 'Olive Tree Kids',
-      district: 'Sweifieh',
-      phone: '06 555 1234',
-      verified: true,
-      listed: true,
-      rating: 4.8,
-      reviews: 94,
-    },
-    requests: REQUESTS,
-    roster: ROSTER,
-    capacity: CAPACITY,
-    reports: N_REPORTS,
-    invoices: INVOICES,
-    payouts: PAYOUTS,
-    threads: N_THREADS,
-    notifications: N_NOTIFS,
-    draft: {},
-    registration: {
-      businessName: '',
-      license: '',
-      commercial: '',
-      owner: '',
-      phone: '',
-      email: '',
-      address: '',
-      district: '',
-      licenseDoc: null,
-      idDoc: null,
-      photo: null,
-    },
-    approvalStatus: 'approved',
+    nursery: { id: '', name: '', district: '', phone: '', verified: false, listed: false, rating: 0, reviews: 0 },
+    requests: [], roster: [], capacity: [], reports: [], invoices: [], payouts: [],
+    threads: [], notifications: [], draft: {},
+    registration: { businessName: '', license: '', commercial: '', owner: '', phone: '', email: '', address: '', district: '', licenseDoc: null, idDoc: null, photo: null },
+    approvalStatus: 'pending',
   };
 }
+

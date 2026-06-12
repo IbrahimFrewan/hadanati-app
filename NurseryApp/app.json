@@ -20,7 +20,18 @@
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
-      ["expo-image-picker", { "photosPermission": "Allow حضانتي to access your photos to upload verification documents." }]
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow حضانتي to access your photos to upload verification documents."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow حضانتي to scan the parent's pickup QR code."
+        }
+      ]
     ],
     "web": {
       "favicon": "./assets/favicon.png"

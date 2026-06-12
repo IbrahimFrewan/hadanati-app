@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Animated, TextInput, StatusBar as RNStatusBar } from 'react-native';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +29,37 @@ export function Attendance() {
   const [passCode, setPassCode] = useState('');
   const [passErr, setPassErr] = useState('');
   const [scanned, setScanned] = useState<{ name: string; parent: string } | null>(null);
+  const [pendingOut, setPendingOut] = useState<string | null>(null);
+  const [camBusy, setCamBusy] = useState(false);
+  const [camPerm, requestCamPerm] = useCameraPermissions();
+
+  // Open the scanner; for checkout we remember the child so we can continue to
+  // the checkout report only AFTER the parent's QR is verified.
+  const openScan = (outChildId?: string) => {
+    setPendingOut(outChildId ?? null);
+    setPassCode(''); setPassErr(''); setScanned(null); setQr(true);
+    if (isSupabaseConfigured && !camPerm?.granted) requestCamPerm();
+  };
+
+  const handleVerified = (name: string, parent: string) => {
+    setScanned({ name, parent });
+    const id = pendingOut;
+    if (id) {
+      setPendingOut(null);
+      setTimeout(() => { setQr(false); setScanned(null); navigation.navigate('NCheckoutReport', { childId: id }); }, 700);
+    }
+  };
+
+  const doVerify = async (code: string) => {
+    if (camBusy) return;
+    setCamBusy(true); setPassErr('');
+    try {
+      const res = await actions.verifyPickup(code.trim());
+      handleVerified(res.child, res.parent);
+    } catch (e: any) {
+      setPassErr(e?.message ?? 'Invalid code');
+    } finally { setCamBusy(false); }
+  };
   const scanAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -55,7 +87,7 @@ export function Attendance() {
         title={t(lang, 'attendance')}
         subtitle="Today · 2 Jun · 9:24 AM"
         right={
-          <TouchableOpacity onPress={() => setQr(true)} style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: C.header, alignItems: 'center', justifyContent: 'center' }}>
+          <TouchableOpacity onPress={() => openScan()} style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: C.header, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="qrScan" size={20} color="#fff" />
           </TouchableOpacity>
         }
@@ -76,7 +108,7 @@ export function Attendance() {
       </View>
 
       {/* Filter pills */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 22, gap: 8, paddingBottom: 12 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 22, gap: 8, paddingBottom: 12, alignItems: 'center' }}>
         <Pill active={filter === 'all'} onPress={() => setFilter('all')}>All {store.roster.length}</Pill>
         <Pill active={filter === 'in'} onPress={() => setFilter('in')}>In {counts.in}</Pill>
         <Pill active={filter === 'out'} onPress={() => setFilter('out')}>Not in {counts.out}</Pill>
@@ -107,7 +139,7 @@ export function Attendance() {
               {k.status === 'in' ? (
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{ fontFamily: F.displayBold, fontSize: 14, fontWeight: '800', color: C.green }}>{k.inAt}</Text>
-                  <TouchableOpacity onPress={() => navigation.navigate('NCheckoutReport', { childId: k.id })}>
+                  <TouchableOpacity onPress={() => openScan(k.id)}>
                     <Text style={{ color: C.danger, fontWeight: '700', fontSize: 11.5, fontFamily: F.bodyBold, marginTop: 2 }}>{t(lang, 'checkOut')}</Text>
                   </TouchableOpacity>
                 </View>
@@ -136,7 +168,16 @@ export function Attendance() {
         {!scanned ? (
           <View>
             <Text style={{ fontSize: 13, color: C.mut, lineHeight: 21, marginBottom: 18 }}>{t(lang, 'scanInstructions')}</Text>
-            <View style={{ aspectRatio: 1, maxWidth: 280, alignSelf: 'center', backgroundColor: '#1c2820', borderRadius: 18, overflow: 'hidden', marginBottom: 18, position: 'relative' }}>
+            {isSupabaseConfigured && camPerm?.granted ? (
+              <View style={{ aspectRatio: 1, maxWidth: 280, alignSelf: 'center', borderRadius: 18, overflow: 'hidden', marginBottom: 18 }}>
+                <CameraView
+                  style={{ flex: 1 }}
+                  facing="back"
+                  barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                  onBarcodeScanned={({ data }) => { if (!camBusy && !scanned) doVerify(String(data)); }}
+                />
+              </View>
+            ) : <View style={{ aspectRatio: 1, maxWidth: 280, alignSelf: 'center', backgroundColor: '#1c2820', borderRadius: 18, overflow: 'hidden', marginBottom: 18, position: 'relative' }}>
               {/* Corner brackets */}
               {[
                 { top: 14, left: 14, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 10 },
@@ -153,7 +194,7 @@ export function Attendance() {
                 transform: [{ translateY: scanAnim.interpolate({ inputRange: [0, 1], outputRange: [30, 200] }) }],
               }} />
               <Text style={{ position: 'absolute', bottom: 16, left: 0, right: 0, textAlign: 'center', color: '#cfe0cf', fontSize: 12 }}>{t(lang, 'aligning')}</Text>
-            </View>
+            </View>}
             {/* Pickup-code entry: the parent reads their one-time code from
                 their app; we verify it server-side (qr-pass). */}
             {isSupabaseConfigured && (
@@ -177,14 +218,9 @@ export function Attendance() {
               <Button variant="secondary" onPress={() => setQr(false)} style={{ flex: 1 }}>{t(lang, 'cancel')}</Button>
               <Button
                 onPress={async () => {
-                  if (!isSupabaseConfigured) { setScanned({ name: 'Yara H.', parent: 'Layla H.' }); return; }
-                  try {
-                    const res = await actions.verifyPickup(passCode.trim());
-                    setScanned({ name: res.child, parent: res.parent });
-                    setPassCode('');
-                  } catch (e: any) {
-                    setPassErr(e?.message ?? 'Invalid code');
-                  }
+                  if (!isSupabaseConfigured) { handleVerified('Yara H.', 'Layla H.'); return; }
+                  await doVerify(passCode);
+                  setPassCode('');
                 }}
                 style={{ flex: 1 }} icon="check"
               >

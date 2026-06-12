@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, StatusBar as RNStatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { C, F } from '../theme';
@@ -26,6 +27,7 @@ function fmtDur(min: number) {
 
 export function NCheckoutReport() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const route = useRoute<RouteProp<RootStackParamList, 'NCheckoutReport'>>();
   const { lang, store, actions } = useN();
   const child = store.roster.find((k) => k.id === route.params.childId) || store.roster[0];
@@ -213,7 +215,7 @@ export function NCheckoutReport() {
         </Section>
       </ScrollView>
 
-      <View style={{ paddingHorizontal: 22, paddingVertical: 11, paddingBottom: 22, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: 'rgba(255,255,255,0.95)' }}>
+      <View style={{ paddingHorizontal: 22, paddingVertical: 11, paddingBottom: Math.max(insets.bottom, 12) + 10, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: 'rgba(255,255,255,0.95)' }}>
         <Button full size="lg" disabled={signing} iconRight={signing ? undefined : 'check'} onPress={send}>
           {signing ? t(lang, 'signingOut') : t(lang, 'signOutSend')}
         </Button>
