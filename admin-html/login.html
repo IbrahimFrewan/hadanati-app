@@ -59,7 +59,10 @@
         if (!prof || prof.role !== "admin") { await sb.auth.signOut(); throw new Error("This account is not an administrator."); }
         location.replace("index.html");
       } catch (e) {
-        showErr(e.message || "Sign-in failed"); btn.disabled = false; btn.textContent = "Sign in";
+        const msg = (e && (e.message || e.error_description || e.error)) ||
+          (typeof e === "string" ? e : JSON.stringify(e));
+        showErr(msg && msg !== "{}" ? msg : "Sign-in failed — check email/password, or that the account is confirmed.");
+        btn.disabled = false; btn.textContent = "Sign in";
       }
     });
   </script>
