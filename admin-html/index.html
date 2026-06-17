@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hadanati Admin — Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="assets/css/styles.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="sidebar"></aside>
+
+    <main class="main">
+      <div class="page-head d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+        <div>
+          <h1 id="hello">Hello</h1>
+          <p>Here's what's happening across the platform today.</p>
+        </div>
+        <span class="date-chip"><i class="bi bi-calendar3"></i><span id="today"></span></span>
+      </div>
+
+      <div class="stat-grid mb-4" id="stats">
+        <div class="spinner-pad">Loading…</div>
+      </div>
+
+      <div class="card-soft p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">Bookings · last 7 days</h5>
+          <span class="badge-soft b-green" id="weekTotal">—</span>
+        </div>
+        <canvas id="chart" height="90"></canvas>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="fw-bold mb-0">Pending verification</h5>
+        <a href="verification.html" class="text-decoration-none fw-semibold" style="color:var(--dgreen)">Review all →</a>
+      </div>
+      <div class="table-wrap" id="pendingWrap"><div class="spinner-pad">Loading…</div></div>
+    </main>
+
+    <aside class="right-panel">
+      <div class="profile-card mb-4">
+        <div class="pa" id="paInit">A</div>
+        <h6 class="fw-bold mb-0" id="paName">Admin</h6>
+        <div class="text-muted small mb-3" id="paEmail"></div>
+        <div class="d-flex justify-content-center gap-2">
+          <a class="icon-btn" href="finance.html" title="Finance"><i class="bi bi-wallet2"></i></a>
+          <a class="icon-btn" href="users.html" title="Users"><i class="bi bi-people"></i></a>
+          <a class="icon-btn" href="audit.html" title="Audit"><i class="bi bi-clipboard-data"></i></a>
+        </div>
+      </div>
+      <div class="text-center text-muted text-uppercase small fw-bold mb-2" style="letter-spacing:.6px">Recent activity</div>
+      <div id="activity"><div class="spinner-pad">Loading…</div></div>
+    </aside>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+  (async () => {
+    renderSidebar("dashboard");
+    const admin = await requireAdmin();
+    document.getElementById("hello").textContent = "Hello, " + (admin.name.split(" ")[0] || "Admin");
+    document.getElementById("today").textContent = new Date().toLocaleDateString("en-GB", { dateStyle: "medium" });
+    document.getElementById("paInit").textContent = fmt.initials(admin.name);
+    document.getElementById("paName").textContent = admin.name;
+    document.getElementById("paEmail").textContent = admin.email || "";
+
+    const count = (q) => q.then((r) => r.count || 0);
+    const [pending, nurseries, users, bookings, payments] = await Promise.all([
+      count(sb.from("nurseries").select("id", { count: "exact", head: true }).eq("status", "pending")),
+      count(sb.from("nurseries").select("id", { count: "exact", head: true })),
+      count(sb.from("profiles").select("id", { count: "exact", head: true })),
+      count(sb.from("bookings").select("id", { count: "exact", head: true })),
+      sb.from("payments").select("net_amount,status").eq("status", "captured"),
+    ]);
+    const revenue = (payments.data || []).reduce((a, p) => a + Number(p.net_amount), 0);
+
+    const stat = (icon, v, l, warn) =>
+      `<div class="card-soft"><div class="stat"><div class="ic ${warn ? "warn" : ""}"><i class="bi ${icon}"></i></div><div><div class="v">${v}</div><div class="l">${l}</div></div></div></div>`;
+    document.getElementById("stats").innerHTML =
+      stat("bi-patch-check", pending, "Pending verification", pending > 0) +
+      stat("bi-house-heart", nurseries, "Total nurseries") +
+      stat("bi-people", users, "Total users") +
+      stat("bi-calendar2-check", bookings, "Bookings") +
+      stat("bi-wallet2", fmt.jod(revenue), "Captured revenue");
+
+    // last-7-days bookings chart
+    const since = new Date(Date.now() - 6 * 864e5); since.setHours(0, 0, 0, 0);
+    const { data: recent } = await sb.from("bookings").select("created_at").gte("created_at", since.toISOString());
+    const labels = [], buckets = [];
+    for (let i = 6; i >= 0; i--) { const d = new Date(Date.now() - i * 864e5); labels.push(d.toLocaleDateString("en-GB", { weekday: "short" })); buckets.push(0); }
+    (recent || []).forEach((b) => { const idx = 6 - Math.floor((Date.now() - new Date(b.created_at)) / 864e5); if (idx >= 0 && idx < 7) buckets[idx]++; });
+    document.getElementById("weekTotal").textContent = (recent || []).length + " bookings";
+    new Chart(document.getElementById("chart"), {
+      type: "line",
+      data: { labels, datasets: [{ data: buckets, borderColor: "#3f8a5a", backgroundColor: "rgba(63,138,90,.12)", fill: true, tension: .4, pointBackgroundColor: "#2c5a3d", borderWidth: 3 }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "#f0f1ef" } }, x: { grid: { display: false } } } },
+    });
+
+    // pending list
+    const { data: pend } = await sb.from("nurseries").select("id,name,district,created_at").eq("status", "pending").order("created_at").limit(6);
+    const pw = document.getElementById("pendingWrap");
+    pw.innerHTML = !pend || !pend.length
+      ? '<div class="empty">No nurseries awaiting review. 🌿</div>'
+      : '<table class="tbl"><thead><tr><th>Nursery</th><th>District</th><th>Submitted</th><th></th></tr></thead><tbody>' +
+        pend.map((n) => `<tr><td><b>${fmt.esc(n.name)}</b></td><td>${fmt.esc(n.district || "—")}</td><td>${fmt.day(n.created_at)}</td><td class="text-end"><a class="btn btn-ghost btn-sm" href="verification.html">Review</a></td></tr>`).join("") +
+        "</tbody></table>";
+
+    // recent activity from audit log
+    const { data: log } = await sb.from("audit_log").select("action,entity,created_at").order("created_at", { ascending: false }).limit(8);
+    const ICON = { approve_nursery: "bi-patch-check", reject_nursery: "bi-x-octagon", suspend_nursery: "bi-pause-circle", run_payouts: "bi-wallet2", set_user_status: "bi-person-gear" };
+    document.getElementById("activity").innerHTML = !log || !log.length
+      ? '<div class="text-muted small text-center py-3">No activity yet.</div>'
+      : log.map((a) => `<div class="activity-item"><div class="dot"><i class="bi ${ICON[a.action] || "bi-dot"}"></i></div><div><div class="fw-semibold small">${fmt.esc(a.action.replace(/_/g, " "))}</div><div class="t">${fmt.esc(a.entity)} · ${fmt.date(a.created_at)}</div></div></div>`).join("");
+  })().catch((e) => console.warn(e));
+  </script>
+</body>
+</html>
