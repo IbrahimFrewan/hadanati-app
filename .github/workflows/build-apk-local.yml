@@ -61,7 +61,9 @@ jobs:
           code=${PIPESTATUS[0]}
           set -e
           if [ "$code" != "0" ]; then
-            err=$(awk '/FAILURE: Build failed with an exception/{f=1} f{print}' /tmp/gradle.log | head -45 | sed ':a;N;$!ba;s/\n/%0A/g')
+            # The real node/autolinking error prints BEFORE gradle's FAILURE
+            # block — surface those lines too (logs host is blocked from review).
+            err=$(grep -niE "error|cannot|exception|undefined|not found|autolink|expo-modules|SyntaxError|TypeError|node:internal|at Object|EACCES|ENOENT" /tmp/gradle.log | tail -40 | sed ':a;N;$!ba;s/\n/%0A/g')
             echo "::error title=Gradle fail (${{ matrix.app }})::${err}"
             exit 1
           fi
