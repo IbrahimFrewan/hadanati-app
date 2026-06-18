@@ -1,0 +1,82 @@
+name: Build Android APKs (local Gradle, no EAS)
+
+# Builds installable APKs for BOTH apps on GitHub's runners using
+# `expo prebuild` + Gradle — free, unlimited, no EAS quota, no Expo token.
+# Each APK is uploaded as a downloadable artifact on the run summary page.
+# Manual trigger.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: build-apk-local-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [HadanatiApp, NurseryApp]
+    env:
+      # Supabase keys are read from each app's eas.json today; expose them here
+      # too so the JS bundle bakes them in for the local Gradle build.
+      EXPO_PUBLIC_SUPABASE_URL: https://fpfgmgduiqptxiyeowry.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_6_GSInENq7-ABEF3pboFXg_q_mKqQTm
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.app }}
+        run: npm install
+
+      - name: Prebuild native Android project
+        working-directory: ${{ matrix.app }}
+        run: npx expo prebuild --platform android --no-install --non-interactive
+
+      - name: Build release APK (debug-signed)
+        working-directory: ${{ matrix.app }}/android
+        run: |
+          echo "org.gradle.jvmargs=-Xmx5120m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
+          chmod +x ./gradlew
+          set +e
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace --max-workers=2 2>&1 | tee /tmp/gradle.log
+          code=${PIPESTATUS[0]}
+          set -e
+          if [ "$code" != "0" ]; then
+            err=$(awk '/FAILURE: Build failed with an exception/{f=1} f{print}' /tmp/gradle.log | head -45 | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Gradle fail (${{ matrix.app }})::${err}"
+            exit 1
+          fi
+
+      - name: Locate APK
+        if: always()
+        run: |
+          found=$(find ${{ matrix.app }}/android -name '*.apk' 2>/dev/null)
+          echo "$found"
+          [ -n "$found" ] && echo "::notice title=APK (${{ matrix.app }})::${found//$'\n'/%0A}" || echo "::error::no apk produced"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-apk
+          path: ${{ matrix.app }}/android/**/*.apk
+          retention-days: 30
+          if-no-files-found: error
